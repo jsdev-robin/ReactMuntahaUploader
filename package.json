@@ -1,8 +1,8 @@
 {
   "name": "react-muntaha-uploader",
-  "version": "1.0.0",
-  "main": "dist/useMuntahaDrop.js",
-  "types": "dist/useMuntahaDrop.d.ts",
+  "version": "1.0.8",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
   "scripts": {
     "build": "tsc",
     "test": "jest",
@@ -24,9 +24,11 @@
     "react-dom": "^18.3.1"
   },
   "devDependencies": {
+    "@babel/cli": "^7.25.9",
     "@babel/core": "^7.26.0",
     "@babel/preset-env": "^7.26.0",
     "@babel/preset-react": "^7.25.9",
+    "@babel/preset-typescript": "^7.26.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.0.1",
     "@types/react": "^18.3.12",

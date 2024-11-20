@@ -14,7 +14,11 @@ The hook accepts a configuration object with the following properties:
 
 - **Type**: `AllowedFileType[]`
 - **Description**: An array of allowed MIME types for the uploaded files.
-- **Default**: `['image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'text/plain', 'text/csv', 'video/mp4', 'video/webm', 'video/ogg']`
+- **Default**: `[
+  'image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'text/plain', 'text/csv', 
+  'video/mp4', 'video/webm', 'video/ogg', 'image/webp', 'image/jpg', 'image/bmp', 
+  'image/tiff', 'image/svg+xml', 'audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/aac'
+]`
 
 ### `maxFileSize` (Optional)
 
@@ -80,7 +84,7 @@ The hook returns an object with the following properties:
 
 ```tsx
 import React from 'react'
-import useMuntahaDrop from 'react-muntaha-uploader'
+import { useMuntahaDrop } from 'react-muntaha-uploader'
 
 const SingleFileUpload = () => {
   const { files, previewUrls, error, handleFileChange, removeFile } =
@@ -107,7 +111,7 @@ const SingleFileUpload = () => {
 
 ```tsx
 import React from 'react'
-import useMuntahaDrop from 'react-muntaha-uploader'
+import { useMuntahaDrop } from 'react-muntaha-uploader'
 
 const MultipleFileUpload = () => {
   const { files, previewUrls, error, handleFileChange, removeFile } =

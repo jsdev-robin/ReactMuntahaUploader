@@ -1,16 +1,17 @@
 {
   "compilerOptions": {
     "target": "es5",
-    "lib": ["dom", "esnext"],
-    "moduleResolution": "node",
     "module": "esnext",
-    "jsx": "react-jsx",
-    "declaration": true,
-    "declarationDir": "./dist/types",
-    "outDir": "./dist",
+    "moduleResolution": "node",
+    "strict": true,
+    "jsx": "react",
     "esModuleInterop": true,
-    "skipLibCheck": true
+    "skipLibCheck": true,
+    "declaration": true, // Enable .d.ts generation
+    "declarationDir": "dist", // Where .d.ts files will be output
+    "outDir": "dist", // Where compiled JS files will be output
+    "emitDeclarationOnly": false // Set to true if you want to generate only .d.ts files
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx"],
-  "exclude": ["node_modules"]
+  "include": ["src/**/*"], // Include source files
+  "exclude": ["node_modules"] // Exclude dependencies
 }

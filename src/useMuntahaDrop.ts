@@ -7,12 +7,21 @@ type AllowedFileType =
   | 'image/jpeg'
   | 'image/png'
   | 'image/gif'
-  | 'text/plain'
+  | 'image/webp'
+  | 'image/jpg'
+  | 'image/bmp'
+  | 'image/tiff'
+  | 'image/svg+xml'
   | 'application/pdf'
+  | 'text/plain'
   | 'text/csv'
   | 'video/mp4'
   | 'video/webm'
   | 'video/ogg'
+  | 'audio/mpeg'
+  | 'audio/wav'
+  | 'audio/ogg'
+  | 'audio/aac'
 
 /**
  * Hook return type that determines the structure based on whether multiple files are allowed.
@@ -85,12 +94,21 @@ const useMuntahaDrop = <T extends boolean>(
       'image/jpeg',
       'image/png',
       'image/gif',
+      'image/webp',
+      'image/jpg',
+      'image/bmp',
+      'image/tiff',
+      'image/svg+xml',
       'application/pdf',
       'text/plain',
       'text/csv',
       'video/mp4',
       'video/webm',
       'video/ogg',
+      'audio/mpeg',
+      'audio/wav',
+      'audio/ogg',
+      'audio/aac',
     ],
     maxFileSize = 10 * 1024 * 1024,
     multiple = false as T,
@@ -248,19 +266,6 @@ const useMuntahaDrop = <T extends boolean>(
     [multiple]
   )
 
-  /**
-   * Cleanup function to revoke object URLs when the component is unmounted or files are removed.
-   */
-  useEffect(() => {
-    return () => {
-      if (multiple && Array.isArray(previewUrls)) {
-        previewUrls.forEach((url) => URL.revokeObjectURL(url))
-      } else if (previewUrls && typeof previewUrls === 'string') {
-        URL.revokeObjectURL(previewUrls)
-      }
-    }
-  }, [previewUrls, multiple])
-
   return {
     files,
     previewUrls,
@@ -268,7 +273,7 @@ const useMuntahaDrop = <T extends boolean>(
     error,
     handleFileChange,
     removeFile,
-  } as UseFileUploadResult<T>
+  }
 }
 
 export default useMuntahaDrop
