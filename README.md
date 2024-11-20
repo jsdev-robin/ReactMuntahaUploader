@@ -76,6 +76,11 @@ The hook returns an object with the following properties:
 - If `multiple` is `true`, the index of the file to be removed should be passed.
 - If `multiple` is `false`, it clears the single file.
 
+### `inputRef`
+
+- **Type**: `MutableRefObject<HTMLInputElement | null>`
+- **Description**: A React ref object for accessing and resetting the file input element programmatically.
+
 ---
 
 ## Usage Example
@@ -87,14 +92,14 @@ import React from 'react'
 import { useMuntahaDrop } from 'react-muntaha-uploader'
 
 const SingleFileUpload = () => {
-  const { files, previewUrls, error, handleFileChange, removeFile } =
+  const { files, previewUrls, error, handleFileChange, removeFile, inputRef } =
     useMuntahaDrop({
       multiple: false,
     })
 
   return (
     <div>
-      <input type="file" onChange={handleFileChange} />
+      <input type="file" onChange={handleFileChange} ref={inputRef} />
       {error && <p>{error}</p>}
       {previewUrls && (
         <div>
@@ -114,14 +119,14 @@ import React from 'react'
 import { useMuntahaDrop } from 'react-muntaha-uploader'
 
 const MultipleFileUpload = () => {
-  const { files, previewUrls, error, handleFileChange, removeFile } =
+  const { files, previewUrls, error, handleFileChange, removeFile, inputRef } =
     useMuntahaDrop({
       multiple: true,
     })
 
   return (
     <div>
-      <input type="file" multiple onChange={handleFileChange} />
+      <input type="file" multiple onChange={handleFileChange} ref={inputRef} />
       {error && <p>{error}</p>}
       <div>
         {previewUrls &&
