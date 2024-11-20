@@ -1,12 +1,8 @@
-# Creating markdown documentation for the useFileDrop hook
-
-md_content = """
-
 # useFileDrop Hook Documentation
 
 ## Overview
 
-The `useFileDrop` hook provides an easy way to manage file uploads in React. It handles file selection, validation (based on file type and size), preview generation, base64 encoding, and allows for file removal. This hook supports both single and multiple file uploads, and provides useful metadata about the uploaded files.
+The `react-muntaha-uploader` hook provides an easy way to manage file uploads in React. It handles file selection, validation (based on file type and size), preview generation, base64 encoding, and allows for file removal. This hook supports both single and multiple file uploads, and provides useful metadata about the uploaded files.
 
 ---
 
@@ -84,7 +80,7 @@ The hook returns an object with the following properties:
 
 ```tsx
 import React from 'react'
-import useFileDrop from './useFileDrop'
+import useFileDrop from 'react-muntaha-uploader'
 
 const SingleFileUpload = () => {
   const { files, previewUrls, error, handleFileChange, removeFile } =
@@ -96,12 +92,35 @@ const SingleFileUpload = () => {
     <div>
       <input type="file" onChange={handleFileChange} />
       {error && <p>{error}</p>}
-      {files && previewUrls && (
+      {previewUrls && (
         <div>
           <img src={previewUrls} alt="Preview" width="100" />
           <button onClick={() => removeFile()}>Remove</button>
         </div>
       )}
+    </div>
+  )
+}
+
+const MultipleFileUpload = () => {
+  const { files, previewUrls, error, handleFileChange, removeFile } =
+    useFileDrop({
+      multiple: true,
+    })
+
+  return (
+    <div>
+      <input type="file" multiple onChange={handleFileChange} />
+      {error && <p>{error}</p>}
+      <div>
+        {previewUrls &&
+          previewUrls.map((url, index) => (
+            <div key={index}>
+              <img src={url} alt={`Preview ${index}`} width="100" />
+              <button onClick={() => removeFile(index)}>Remove</button>
+            </div>
+          ))}
+      </div>
     </div>
   )
 }
