@@ -1,0 +1,42 @@
+{
+  "name": "react-muntaha-uploader",
+  "version": "1.0.0",
+  "main": "dist/useFileUpload.js",
+  "types": "dist/useFileUpload.d.ts",
+  "scripts": {
+    "build": "tsc",
+    "test": "jest",
+    "lint": "eslint . --ext .ts,.tsx"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/jsdev-robin/ReactMuntahaUploader.git"
+  },
+  "author": "jsdev.robin@gmail.com",
+  "license": "ISC",
+  "bugs": {
+    "url": "https://github.com/jsdev-robin/ReactMuntahaUploader/issues"
+  },
+  "homepage": "https://github.com/jsdev-robin/ReactMuntahaUploader#readme",
+  "description": "",
+  "dependencies": {
+    "react": "^18.3.1",
+    "react-dom": "^18.3.1"
+  },
+  "devDependencies": {
+    "@babel/core": "^7.26.0",
+    "@babel/preset-env": "^7.26.0",
+    "@babel/preset-react": "^7.25.9",
+    "@testing-library/jest-dom": "^6.6.3",
+    "@testing-library/react": "^16.0.1",
+    "@types/react": "^18.3.12",
+    "@types/react-dom": "^18.3.1",
+    "eslint": "^9.15.0",
+    "eslint-plugin-react": "^7.37.2",
+    "eslint-plugin-react-hooks": "^5.0.0",
+    "jest": "^29.7.0",
+    "prettier": "^3.3.3",
+    "ts-jest": "^29.2.5",
+    "typescript": "^5.6.3"
+  }
+}
