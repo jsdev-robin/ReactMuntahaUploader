@@ -1,8 +1,8 @@
 {
   "name": "react-muntaha-uploader",
   "version": "1.0.0",
-  "main": "dist/useFileUpload.js",
-  "types": "dist/useFileUpload.d.ts",
+  "main": "dist/useMuntahaDrop.js",
+  "types": "dist/useMuntahaDrop.d.ts",
   "scripts": {
     "build": "tsc",
     "test": "jest",
