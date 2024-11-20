@@ -92,10 +92,16 @@ import React from 'react'
 import { useMuntahaDrop } from 'react-muntaha-uploader'
 
 const SingleFileUpload = () => {
-  const { files, previewUrls, error, handleFileChange, removeFile, inputRef } =
-    useMuntahaDrop({
-      multiple: false,
-    })
+  const {
+    previewUrls,
+    base64Data,
+    error,
+    handleFileChange,
+    removeFile,
+    inputRef,
+  } = useMuntahaDrop({
+    multiple: false,
+  })
 
   return (
     <div>
@@ -119,10 +125,16 @@ import React from 'react'
 import { useMuntahaDrop } from 'react-muntaha-uploader'
 
 const MultipleFileUpload = () => {
-  const { files, previewUrls, error, handleFileChange, removeFile, inputRef } =
-    useMuntahaDrop({
-      multiple: true,
-    })
+  const {
+    previewUrls,
+    base64Data,
+    error,
+    handleFileChange,
+    removeFile,
+    inputRef,
+  } = useMuntahaDrop({
+    multiple: true,
+  })
 
   return (
     <div>
