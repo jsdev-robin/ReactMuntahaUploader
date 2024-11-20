@@ -101,9 +101,14 @@ const SingleFileUpload = () => {
     </div>
   )
 }
-
+```
 
 ### Multiple File Upload Example:
+
+```tsx
+import React from 'react'
+import useFileDrop from 'react-muntaha-uploader'
+
 const MultipleFileUpload = () => {
   const { files, previewUrls, error, handleFileChange, removeFile } =
     useFileDrop({
