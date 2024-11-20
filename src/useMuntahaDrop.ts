@@ -276,4 +276,4 @@ const useMuntahaDrop = <T extends boolean>(
   }
 }
 
-export default useMuntahaDrop
+export  {useMuntahaDrop}
