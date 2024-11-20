@@ -102,6 +102,8 @@ const SingleFileUpload = () => {
   )
 }
 
+
+### Multiple File Upload Example:
 const MultipleFileUpload = () => {
   const { files, previewUrls, error, handleFileChange, removeFile } =
     useFileDrop({
