@@ -73,7 +73,7 @@ interface UseFileUploadResult<T extends boolean> {
  * - `handleFileChange`: File change handler.
  * - `removeFile`: File removal handler.
  */
-const useFileDrop = <T extends boolean>(
+const useMuntahaDrop = <T extends boolean>(
   options: {
     allowedTypes?: AllowedFileType[]
     maxFileSize?: number
@@ -271,4 +271,4 @@ const useFileDrop = <T extends boolean>(
   } as UseFileUploadResult<T>
 }
 
-export default useFileDrop
+export default useMuntahaDrop

@@ -1,4 +1,4 @@
-# useFileDrop Hook Documentation
+# react-muntaha-uploader Hook Documentation
 
 ## Overview
 
@@ -80,11 +80,11 @@ The hook returns an object with the following properties:
 
 ```tsx
 import React from 'react'
-import useFileDrop from 'react-muntaha-uploader'
+import useMuntahaDrop from 'react-muntaha-uploader'
 
 const SingleFileUpload = () => {
   const { files, previewUrls, error, handleFileChange, removeFile } =
-    useFileDrop({
+    useMuntahaDrop({
       multiple: false,
     })
 
@@ -107,11 +107,11 @@ const SingleFileUpload = () => {
 
 ```tsx
 import React from 'react'
-import useFileDrop from 'react-muntaha-uploader'
+import useMuntahaDrop from 'react-muntaha-uploader'
 
 const MultipleFileUpload = () => {
   const { files, previewUrls, error, handleFileChange, removeFile } =
-    useFileDrop({
+    useMuntahaDrop({
       multiple: true,
     })
 
