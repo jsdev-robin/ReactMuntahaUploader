@@ -1,33 +1,27 @@
-import {
-  useState,
-  useCallback,
-  useEffect,
-  useRef,
-  MutableRefObject,
-} from "react";
+import { useState, useCallback, useRef, MutableRefObject } from 'react'
 
 /**
  * Allowed file types for upload.
  */
 type AllowedFileType =
-  | "image/jpeg"
-  | "image/png"
-  | "image/gif"
-  | "image/webp"
-  | "image/jpg"
-  | "image/bmp"
-  | "image/tiff"
-  | "image/svg+xml"
-  | "application/pdf"
-  | "text/plain"
-  | "text/csv"
-  | "video/mp4"
-  | "video/webm"
-  | "video/ogg"
-  | "audio/mpeg"
-  | "audio/wav"
-  | "audio/ogg"
-  | "audio/aac";
+  | 'image/jpeg'
+  | 'image/png'
+  | 'image/gif'
+  | 'image/webp'
+  | 'image/jpg'
+  | 'image/bmp'
+  | 'image/tiff'
+  | 'image/svg+xml'
+  | 'application/pdf'
+  | 'text/plain'
+  | 'text/csv'
+  | 'video/mp4'
+  | 'video/webm'
+  | 'video/ogg'
+  | 'audio/mpeg'
+  | 'audio/wav'
+  | 'audio/ogg'
+  | 'audio/aac'
 
 /**
  * Hook return type that determines the structure based on whether multiple files are allowed.
@@ -38,43 +32,48 @@ interface UseFileUploadResult<T extends boolean> {
    * - If `multiple` is true: Array of files.
    * - If `multiple` is false: A single file or null.
    */
-  files: T extends true ? File[] : File | null;
+  files: T extends true ? File[] : File | null
 
   /**
    * The preview URLs generated for the uploaded files.
    * - If `multiple` is true: Array of preview URLs.
    * - If `multiple` is false: A single preview URL or null.
    */
-  previewUrls: T extends true ? string[] : string | null;
+  previewUrls: T extends true ? string[] : string | null
 
   /**
    * The base64 encoded data for the uploaded files.
    * - If `multiple` is true: Array of base64 strings.
    * - If `multiple` is false: A single base64 string or null.
    */
-  base64Data: T extends true ? string[] : string | null;
+  base64Data: T extends true ? string[] : string | null
 
   /**
    * Error message, if any file validation fails.
    */
-  error: string | null;
+  error: string | null
 
   /**
    * Handler for file selection changes.
    */
-  handleFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void;
+  handleFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void
 
   /**
    * Removes a file from the list of uploaded files.
    * - If `multiple` is true: Remove a file by index.
    * - If `multiple` is false: Removes the single file.
    */
-  removeFile: (index?: number) => void;
+  removeFile: (index?: number) => void
 
   /**
    * Ref for the file input element.
    */
-  inputRef: MutableRefObject<HTMLInputElement | null>;
+  inputRef: MutableRefObject<HTMLInputElement | null>
+
+  /**
+   * Triggers the file input for manual upload.
+   */
+  uploadTrigger: () => void
 }
 
 /**
@@ -95,153 +94,151 @@ interface UseFileUploadResult<T extends boolean> {
  */
 const useMuntahaDrop = <T extends boolean>(
   options: {
-    allowedTypes?: AllowedFileType[];
-    maxFileSize?: number;
-    multiple?: T;
+    allowedTypes?: AllowedFileType[]
+    maxFileSize?: number
+    multiple?: T
   } = {}
 ): UseFileUploadResult<T> => {
   const {
     allowedTypes = [
-      "image/jpeg",
-      "image/png",
-      "image/gif",
-      "image/webp",
-      "image/jpg",
-      "image/bmp",
-      "image/tiff",
-      "image/svg+xml",
-      "application/pdf",
-      "text/plain",
-      "text/csv",
-      "video/mp4",
-      "video/webm",
-      "video/ogg",
-      "audio/mpeg",
-      "audio/wav",
-      "audio/ogg",
-      "audio/aac",
+      'image/jpeg',
+      'image/png',
+      'image/gif',
+      'image/webp',
+      'image/jpg',
+      'image/bmp',
+      'image/tiff',
+      'image/svg+xml',
+      'application/pdf',
+      'text/plain',
+      'text/csv',
+      'video/mp4',
+      'video/webm',
+      'video/ogg',
+      'audio/mpeg',
+      'audio/wav',
+      'audio/ogg',
+      'audio/aac',
     ],
     maxFileSize = 10 * 1024 * 1024,
     multiple = false as T,
-  } = options;
+  } = options
 
   const [files, setFiles] = useState<T extends true ? File[] : File | null>(
     (multiple ? [] : null) as T extends true ? File[] : File | null
-  );
+  )
   const [previewUrls, setPreviewUrls] = useState<
     T extends true ? string[] : string | null
-  >((multiple ? [] : null) as T extends true ? string[] : string | null);
+  >((multiple ? [] : null) as T extends true ? string[] : string | null)
   const [base64Data, setBase64Data] = useState<
     T extends true ? string[] : string | null
-  >((multiple ? [] : null) as T extends true ? string[] : string | null);
-  const [error, setError] = useState<string | null>(null);
+  >((multiple ? [] : null) as T extends true ? string[] : string | null)
+  const [error, setError] = useState<string | null>(null)
 
   // Ref for the file input
-  const inputRef = useRef<HTMLInputElement | null>(null);
+  const inputRef = useRef<HTMLInputElement | null>(null)
 
   /**
    * Validates file type and size before upload.
    */
   const validateFile = useCallback(
     (file: File): boolean => {
-      const isValidType = allowedTypes.includes(file.type as AllowedFileType);
-      const isValidSize = file.size <= maxFileSize;
+      const isValidType = allowedTypes.includes(file.type as AllowedFileType)
+      const isValidSize = file.size <= maxFileSize
       if (!isValidType) {
         setError(
           `Invalid file type: ${
             file.type
-          }. Allowed types are: ${allowedTypes.join(", ")}`
-        );
-        return false;
+          }. Allowed types are: ${allowedTypes.join(', ')}`
+        )
+        return false
       }
       if (!isValidSize) {
         setError(
           `File size must be smaller than ${maxFileSize / (1024 * 1024)} MB`
-        );
-        return false;
+        )
+        return false
       }
-      setError(null);
-      return true;
+      setError(null)
+      return true
     },
     [allowedTypes, maxFileSize]
-  );
+  )
 
   /**
    * Handles the file change event, reads the files, validates, and generates preview URLs and base64 data.
    */
   const handleFileChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const selectedFiles = Array.from(event.target.files || []);
-      const validFiles = selectedFiles.filter(validateFile);
+      const selectedFiles = Array.from(event.target.files || [])
+      const validFiles = selectedFiles.filter(validateFile)
 
       if (multiple) {
         const fileReadPromises = validFiles.map((file) => {
           return new Promise<{
-            file: File;
-            previewUrl: string;
-            base64: string;
+            file: File
+            previewUrl: string
+            base64: string
           }>((resolve, reject) => {
-            const reader = new FileReader();
+            const reader = new FileReader()
             reader.onloadend = () => {
-              const result = reader.result as string;
+              const result = reader.result as string
               resolve({
                 file,
                 previewUrl: URL.createObjectURL(file),
-                base64: result.split(",")[1],
-              });
-            };
-            reader.onerror = () => reject(new Error("Error reading file"));
-            reader.readAsDataURL(file);
-          });
-        });
+                base64: result,
+              })
+            }
+            reader.onerror = () => reject(new Error('Error reading file'))
+            reader.readAsDataURL(file)
+          })
+        })
 
         try {
-          const results = await Promise.all(fileReadPromises);
+          const results = await Promise.all(fileReadPromises)
           setFiles(
             (prev) =>
               [
                 ...(prev as File[]),
                 ...results.map((r) => r.file),
               ] as T extends true ? File[] : File | null
-          );
+          )
           setPreviewUrls(
             (prev) =>
               [
                 ...(prev as string[]),
                 ...results.map((r) => r.previewUrl),
               ] as T extends true ? string[] : string | null
-          );
+          )
           setBase64Data(
             (prev) =>
               [
                 ...(prev as string[]),
                 ...results.map((r) => r.base64),
               ] as T extends true ? string[] : string | null
-          );
+          )
         } catch {
-          setError("Error reading one or more files");
+          setError('Error reading one or more files')
         }
       } else if (validFiles.length > 0) {
-        const selectedFile = validFiles[0];
-        const reader = new FileReader();
+        const selectedFile = validFiles[0]
+        const reader = new FileReader()
         reader.onloadend = () => {
-          const result = reader.result as string;
-          setFiles(selectedFile as T extends true ? File[] : File | null);
+          const result = reader.result as string
+          setFiles(selectedFile as T extends true ? File[] : File | null)
           setPreviewUrls(
             URL.createObjectURL(selectedFile) as T extends true
               ? string[]
               : string | null
-          );
-          setBase64Data(
-            result.split(",")[1] as T extends true ? string[] : string | null
-          );
-        };
-        reader.onerror = () => setError("Error reading file");
-        reader.readAsDataURL(selectedFile);
+          )
+          setBase64Data(result as T extends true ? string[] : string | null)
+        }
+        reader.onerror = () => setError('Error reading file')
+        reader.readAsDataURL(selectedFile)
       }
     },
     [validateFile, multiple]
-  );
+  )
 
   /**
    * Removes a file from the uploaded list.
@@ -251,40 +248,45 @@ const useMuntahaDrop = <T extends boolean>(
   const removeFile = useCallback(
     (index?: number) => {
       if (multiple) {
-        if (typeof index === "number") {
+        if (typeof index === 'number') {
           setFiles(
             (prev) =>
               (prev as File[]).filter((_, i) => i !== index) as T extends true
                 ? File[]
                 : File | null
-          );
+          )
           setPreviewUrls(
             (prev) =>
               (prev as string[]).filter((_, i) => i !== index) as T extends true
                 ? string[]
                 : string | null
-          );
+          )
           setBase64Data(
             (prev) =>
               (prev as string[]).filter((_, i) => i !== index) as T extends true
                 ? string[]
                 : string | null
-          );
+          )
         }
       } else {
-        setFiles(null as T extends true ? File[] : File | null);
-        setPreviewUrls(null as T extends true ? string[] : string | null);
-        setBase64Data(null as T extends true ? string[] : string | null);
+        setFiles(null as T extends true ? File[] : File | null)
+        setPreviewUrls(null as T extends true ? string[] : string | null)
+        setBase64Data(null as T extends true ? string[] : string | null)
       }
 
       // Reset the input field value
       if (inputRef.current) {
-        inputRef.current.value = "";
+        inputRef.current.value = ''
       }
     },
     [multiple]
-  );
+  )
 
+  const uploadTrigger: () => void = () => {
+    if (inputRef?.current) {
+      inputRef.current.click()
+    }
+  }
   return {
     files,
     previewUrls,
@@ -293,7 +295,8 @@ const useMuntahaDrop = <T extends boolean>(
     handleFileChange,
     removeFile,
     inputRef,
-  };
-};
+    uploadTrigger,
+  }
+}
 
-export { useMuntahaDrop };
+export { useMuntahaDrop }

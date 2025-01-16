@@ -81,6 +81,11 @@ The hook returns an object with the following properties:
 - **Type**: `MutableRefObject<HTMLInputElement | null>`
 - **Description**: A React ref object for accessing and resetting the file input element programmatically.
 
+### `uploadTrigger`
+
+- **Type**: `() => void`
+- **Description**: Triggers the file input for manual upload..
+
 ---
 
 ## Usage Example
