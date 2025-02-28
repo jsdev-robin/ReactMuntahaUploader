@@ -46,7 +46,7 @@ interface UseFileUploadResult<T extends boolean> {
    * - If `multiple` is true: Array of base64 strings.
    * - If `multiple` is false: A single base64 string or null.
    */
-  base64Data: T extends true ? string[] : string | null
+  binaryData: T extends true ? string[] : string | null
 
   /**
    * Error message, if any file validation fails.
@@ -73,30 +73,33 @@ interface UseFileUploadResult<T extends boolean> {
   /**
    * Triggers the file input for manual upload.
    */
-  uploadTrigger: () => void
+  onUploadTrigger: () => void
+
+  /**
+   * Handler for the drop event to handle file drop directly.
+   */
+  onDropTrigger: (event: React.DragEvent<HTMLDivElement>) => void
 }
 
 /**
- * Custom hook for managing file uploads with validation and preview generation.
+ * Custom hook for managing file uploads with validation, preview generation,
+ * and a maximum file count limit (e.g., if you pass 4 then only 4 files are allowed).
  *
  * @param options Configuration options for file upload:
- * - `allowedTypes` (Array of AllowedFileType): An array of MIME types that are allowed for upload.
+ * - `allowedTypes` (Array of AllowedFileType): Allowed MIME types.
  * - `maxFileSize` (number): Maximum file size in bytes (default is 10MB).
- * - `multiple` (boolean): Whether multiple files can be uploaded or not (default is false).
+ * - `multiple` (boolean): Whether multiple files can be uploaded (default is false).
+ * - `maxFiles` (number): Maximum number of files allowed (only when multiple is true).
  *
- * @returns A result object containing:
- * - `files`: The uploaded files.
- * - `previewUrls`: The preview URLs of the uploaded files.
- * - `base64Data`: Base64-encoded data of the files.
- * - `error`: Validation error message.
- * - `handleFileChange`: File change handler.
- * - `removeFile`: File removal handler.
+ * @returns A result object containing files, preview URLs, base64 data, error state,
+ *          and various handlers for managing file uploads.
  */
 const useMuntahaDrop = <T extends boolean>(
   options: {
     allowedTypes?: AllowedFileType[]
     maxFileSize?: number
     multiple?: T
+    maxFiles?: number
   } = {}
 ): UseFileUploadResult<T> => {
   const {
@@ -122,6 +125,7 @@ const useMuntahaDrop = <T extends boolean>(
     ],
     maxFileSize = 10 * 1024 * 1024,
     multiple = false as T,
+    maxFiles, // Maximum number of files allowed (only for multiple files)
   } = options
 
   const [files, setFiles] = useState<T extends true ? File[] : File | null>(
@@ -130,16 +134,16 @@ const useMuntahaDrop = <T extends boolean>(
   const [previewUrls, setPreviewUrls] = useState<
     T extends true ? string[] : string | null
   >((multiple ? [] : null) as T extends true ? string[] : string | null)
-  const [base64Data, setBase64Data] = useState<
+  const [binaryData, setBinaryData] = useState<
     T extends true ? string[] : string | null
   >((multiple ? [] : null) as T extends true ? string[] : string | null)
   const [error, setError] = useState<string | null>(null)
 
-  // Ref for the file input
+  // Ref for the file input element
   const inputRef = useRef<HTMLInputElement | null>(null)
 
   /**
-   * Validates file type and size before upload.
+   * Validates the file type and size.
    */
   const validateFile = useCallback(
     (file: File): boolean => {
@@ -147,9 +151,9 @@ const useMuntahaDrop = <T extends boolean>(
       const isValidSize = file.size <= maxFileSize
       if (!isValidType) {
         setError(
-          `Invalid file type: ${
-            file.type
-          }. Allowed types are: ${allowedTypes.join(', ')}`
+          `Invalid file type: ${file.type}. Allowed types are: ${allowedTypes.join(
+            ', '
+          )}`
         )
         return false
       }
@@ -166,12 +170,31 @@ const useMuntahaDrop = <T extends boolean>(
   )
 
   /**
-   * Handles the file change event, reads the files, validates, and generates preview URLs and base64 data.
+   * Handles file selection changes, validates files,
+   * and generates preview URLs and base64 data.
    */
   const handleFileChange = useCallback(
     async (event: React.ChangeEvent<HTMLInputElement>) => {
-      const selectedFiles = Array.from(event.target.files || [])
-      const validFiles = selectedFiles.filter(validateFile)
+      let selectedFiles = Array.from(event.target.files || [])
+      let validFiles = selectedFiles.filter(validateFile)
+
+      if (multiple && maxFiles) {
+        // Determine how many files are already stored
+        const currentCount = Array.isArray(files) ? files.length : 0
+        if (currentCount >= maxFiles) {
+          setError(`Maximum of ${maxFiles} files already uploaded.`)
+          return
+        }
+        // Limit the number of new files if necessary
+        if (currentCount + validFiles.length > maxFiles) {
+          setError(
+            `You can only upload ${
+              maxFiles - currentCount
+            } more file${maxFiles - currentCount > 1 ? 's' : ''}.`
+          )
+          validFiles = validFiles.slice(0, maxFiles - currentCount)
+        }
+      }
 
       if (multiple) {
         const fileReadPromises = validFiles.map((file) => {
@@ -210,7 +233,7 @@ const useMuntahaDrop = <T extends boolean>(
                 ...results.map((r) => r.previewUrl),
               ] as T extends true ? string[] : string | null
           )
-          setBase64Data(
+          setBinaryData(
             (prev) =>
               [
                 ...(prev as string[]),
@@ -231,19 +254,19 @@ const useMuntahaDrop = <T extends boolean>(
               ? string[]
               : string | null
           )
-          setBase64Data(result as T extends true ? string[] : string | null)
+          setBinaryData(result as T extends true ? string[] : string | null)
         }
         reader.onerror = () => setError('Error reading file')
         reader.readAsDataURL(selectedFile)
       }
     },
-    [validateFile, multiple]
+    [validateFile, multiple, maxFiles, files]
   )
 
   /**
-   * Removes a file from the uploaded list.
-   * - If `multiple` is true, remove by index.
-   * - If `multiple` is false, clears the single file.
+   * Removes a file from the upload list.
+   * - For multiple files, removes by index.
+   * - For single file upload, clears the file.
    */
   const removeFile = useCallback(
     (index?: number) => {
@@ -261,7 +284,7 @@ const useMuntahaDrop = <T extends boolean>(
                 ? string[]
                 : string | null
           )
-          setBase64Data(
+          setBinaryData(
             (prev) =>
               (prev as string[]).filter((_, i) => i !== index) as T extends true
                 ? string[]
@@ -271,7 +294,7 @@ const useMuntahaDrop = <T extends boolean>(
       } else {
         setFiles(null as T extends true ? File[] : File | null)
         setPreviewUrls(null as T extends true ? string[] : string | null)
-        setBase64Data(null as T extends true ? string[] : string | null)
+        setBinaryData(null as T extends true ? string[] : string | null)
       }
 
       // Reset the input field value
@@ -282,20 +305,56 @@ const useMuntahaDrop = <T extends boolean>(
     [multiple]
   )
 
-  const uploadTrigger: () => void = () => {
-    if (inputRef?.current) {
-      inputRef.current.click()
-    }
-  }
+  /**
+   * Triggers the file input manually.
+   */
+  const onUploadTrigger = useCallback(() => {
+    inputRef.current?.click()
+  }, [])
+
+  /**
+   * Handles file drop events.
+   */
+  const onDropTrigger = useCallback(
+    (event: React.DragEvent<HTMLDivElement>) => {
+      event.preventDefault()
+      event.stopPropagation()
+      const droppedFiles = Array.from(event.dataTransfer.files)
+      let validFiles = droppedFiles.filter(validateFile)
+      if (multiple && maxFiles) {
+        const currentCount = Array.isArray(files) ? files.length : 0
+        if (currentCount >= maxFiles) {
+          setError(`Maximum of ${maxFiles} files already uploaded.`)
+          return
+        }
+        if (currentCount + validFiles.length > maxFiles) {
+          setError(
+            `You can only upload ${
+              maxFiles - currentCount
+            } more file${maxFiles - currentCount > 1 ? 's' : ''}.`
+          )
+          validFiles = validFiles.slice(0, maxFiles - currentCount)
+        }
+      }
+      if (validFiles.length > 0) {
+        handleFileChange({
+          target: { files: validFiles as unknown },
+        } as React.ChangeEvent<HTMLInputElement>)
+      }
+    },
+    [validateFile, handleFileChange, multiple, maxFiles, files]
+  )
+
   return {
     files,
     previewUrls,
-    base64Data,
+    binaryData,
     error,
     handleFileChange,
     removeFile,
     inputRef,
-    uploadTrigger,
+    onUploadTrigger,
+    onDropTrigger,
   }
 }
 

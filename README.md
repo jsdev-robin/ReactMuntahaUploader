@@ -52,7 +52,7 @@ The hook returns an object with the following properties:
 - If `multiple` is `true`, it returns an array of URLs.
 - If `multiple` is `false`, it returns a single URL or `null`.
 
-### `base64Data`
+### `binaryData`
 
 - **Type**: `T extends true ? string[] : string | null`
 - **Description**: The base64-encoded data of the uploaded files.
@@ -81,10 +81,15 @@ The hook returns an object with the following properties:
 - **Type**: `MutableRefObject<HTMLInputElement | null>`
 - **Description**: A React ref object for accessing and resetting the file input element programmatically.
 
-### `uploadTrigger`
+### `onUploadTrigger`
 
 - **Type**: `() => void`
 - **Description**: Triggers the file input for manual upload..
+
+### `onDropTrigger`
+
+- **Type**: `(e) => void`
+- **Description**: Handler for the drop event to handle file drop directly.
 
 ---
 
@@ -99,7 +104,7 @@ import { useMuntahaDrop } from 'react-muntaha-uploader'
 const SingleFileUpload = () => {
   const {
     previewUrls,
-    base64Data,
+    binaryData,
     error,
     handleFileChange,
     removeFile,
@@ -132,7 +137,7 @@ import { useMuntahaDrop } from 'react-muntaha-uploader'
 const MultipleFileUpload = () => {
   const {
     previewUrls,
-    base64Data,
+    binaryData,
     error,
     handleFileChange,
     removeFile,
