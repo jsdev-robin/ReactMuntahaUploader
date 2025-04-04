@@ -1,360 +1,490 @@
-import { useState, useCallback, useRef, MutableRefObject } from 'react'
+import React, { useCallback, useEffect, useRef, useState } from 'react'
 
-/**
- * Allowed file types for upload.
- */
-type AllowedFileType =
-  | 'image/jpeg'
-  | 'image/png'
-  | 'image/gif'
-  | 'image/webp'
-  | 'image/jpg'
+type AcceptFileTypes =
+  // Images
+  | 'image/*'
+  | 'image/apng'
+  | 'image/avif'
   | 'image/bmp'
-  | 'image/tiff'
+  | 'image/cgm'
+  | 'image/dicom-rle'
+  | 'image/emf'
+  | 'image/fits'
+  | 'image/g3fax'
+  | 'image/gif'
+  | 'image/heic'
+  | 'image/heif'
+  | 'image/ief'
+  | 'image/jls'
+  | 'image/jp2'
+  | 'image/jpeg'
+  | 'image/jpg'
+  | 'image/jph'
+  | 'image/jpm'
+  | 'image/jpx'
+  | 'image/ktx'
+  | 'image/png'
+  | 'image/prs.btif'
+  | 'image/prs.pti'
   | 'image/svg+xml'
+  | 'image/t38'
+  | 'image/tiff'
+  | 'image/vnd.adobe.photoshop'
+  | 'image/vnd.airzip.accelerator.azv'
+  | 'image/vnd.cns.inf2'
+  | 'image/vnd.djvu'
+  | 'image/vnd.dwg'
+  | 'image/vnd.dxf'
+  | 'image/vnd.fastbidsheet'
+  | 'image/vnd.fpx'
+  | 'image/vnd.fst'
+  | 'image/vnd.fujixerox.edmics-mmr'
+  | 'image/vnd.fujixerox.edmics-rlc'
+  | 'image/vnd.ms-modi'
+  | 'image/vnd.net-fpx'
+  | 'image/vnd.pco.b16'
+  | 'image/vnd.tencent.tap'
+  | 'image/vnd.valve.source.texture'
+  | 'image/vnd.wap.wbmp'
+  | 'image/vnd.xiff'
+  | 'image/webp'
+  | 'image/wmf'
+  | 'image/x-cmu-raster'
+  | 'image/x-cmx'
+  | 'image/x-freehand'
+  | 'image/x-icon'
+  | 'image/x-jng'
+  | 'image/x-mrsid-image'
+  | 'image/x-pcx'
+  | 'image/x-pict'
+  | 'image/x-portable-anymap'
+  | 'image/x-portable-bitmap'
+  | 'image/x-portable-graymap'
+  | 'image/x-portable-pixmap'
+  | 'image/x-rgb'
+  | 'image/x-xbitmap'
+  | 'image/x-xpixmap'
+  | 'image/x-xwindowdump'
+
+  // Videos
+  | 'video/*'
+  | 'video/3gpp'
+  | 'video/3gpp2'
+  | 'video/h261'
+  | 'video/h263'
+  | 'video/h264'
+  | 'video/jpeg'
+  | 'video/jpm'
+  | 'video/mj2'
+  | 'video/mp4'
+  | 'video/mpeg'
+  | 'video/ogg'
+  | 'video/quicktime'
+  | 'video/vnd.dece.hd'
+  | 'video/vnd.dece.mobile'
+  | 'video/vnd.dece.pd'
+  | 'video/vnd.dece.sd'
+  | 'video/vnd.dece.video'
+  | 'video/vnd.dvb.file'
+  | 'video/vnd.fvt'
+  | 'video/vnd.mpegurl'
+  | 'video/vnd.ms-playready.media.pyv'
+  | 'video/vnd.uvvu.mp4'
+  | 'video/vnd.vivo'
+  | 'video/webm'
+  | 'video/x-f4v'
+  | 'video/x-flv'
+  | 'video/x-m4v'
+  | 'video/x-ms-asf'
+  | 'video/x-ms-wm'
+  | 'video/x-ms-wmv'
+  | 'video/x-ms-wmx'
+  | 'video/x-ms-wvx'
+  | 'video/x-msvideo'
+  | 'video/x-sgi-movie'
+
+  // Audio
+  | 'audio/*'
+  | 'audio/aac'
+  | 'audio/ac3'
+  | 'audio/adpcm'
+  | 'audio/basic'
+  | 'audio/midi'
+  | 'audio/mp3'
+  | 'audio/mp4'
+  | 'audio/mpeg'
+  | 'audio/ogg'
+  | 'audio/opus'
+  | 'audio/vorbis'
+  | 'audio/wav'
+  | 'audio/webm'
+  | 'audio/x-aiff'
+  | 'audio/x-mpegurl'
+  | 'audio/x-ms-wax'
+  | 'audio/x-ms-wma'
+  | 'audio/x-pn-realaudio'
+  | 'audio/x-wav'
+
+  // Documents
+  | 'application/*'
   | 'application/pdf'
+  | 'application/msword'
+  | 'application/vnd.openxmlformats-officedocument.wordprocessingml.document'
+  | 'application/vnd.ms-excel'
+  | 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'
+  | 'application/vnd.ms-powerpoint'
+  | 'application/vnd.openxmlformats-officedocument.presentationml.presentation'
+  | 'application/rtf'
   | 'text/plain'
   | 'text/csv'
-  | 'video/mp4'
-  | 'video/webm'
-  | 'video/ogg'
-  | 'audio/mpeg'
-  | 'audio/wav'
-  | 'audio/ogg'
-  | 'audio/aac'
+  | 'text/html'
+  | 'text/css'
+  | 'text/javascript'
+  | 'application/json'
+  | 'application/xml'
 
-/**
- * Hook return type that determines the structure based on whether multiple files are allowed.
- */
-interface UseFileUploadResult<T extends boolean> {
-  /**
-   * The files uploaded by the user.
-   * - If `multiple` is true: Array of files.
-   * - If `multiple` is false: A single file or null.
-   */
-  files: T extends true ? File[] : File | null
+  // Archives & Compressed Files
+  | 'application/zip'
+  | 'application/x-7z-compressed'
+  | 'application/x-rar-compressed'
+  | 'application/x-tar'
+  | 'application/x-bzip'
+  | 'application/x-bzip2'
+  | 'application/gzip'
 
-  /**
-   * The preview URLs generated for the uploaded files.
-   * - If `multiple` is true: Array of preview URLs.
-   * - If `multiple` is false: A single preview URL or null.
-   */
-  previewUrls: T extends true ? string[] : string | null
+  // Fonts
+  | 'font/*'
+  | 'font/otf'
+  | 'font/ttf'
+  | 'font/woff'
+  | 'font/woff2'
 
-  /**
-   * The base64 encoded data for the uploaded files.
-   * - If `multiple` is true: Array of base64 strings.
-   * - If `multiple` is false: A single base64 string or null.
-   */
-  binaryData: T extends true ? string[] : string | null
+  // Programming & Code Files
+  | 'application/x-httpd-php'
+  | 'application/x-java-archive'
+  | 'application/x-python-code'
+  | 'application/x-ruby'
+  | 'application/x-perl'
+  | 'application/x-sh'
+  | 'application/typescript'
+  | 'application/javascript'
 
-  /**
-   * Error message, if any file validation fails.
-   */
+  // Miscellaneous
+  | 'application/vnd.oasis.opendocument.text'
+  | 'application/vnd.oasis.opendocument.spreadsheet'
+  | 'application/vnd.oasis.opendocument.presentation'
+  | 'application/vnd.oasis.opendocument.graphics'
+  | 'application/vnd.oasis.opendocument.chart'
+  | 'application/vnd.oasis.opendocument.formula'
+  | 'application/vnd.oasis.opendocument.database'
+  | '*' // Wildcard for any type
+
+interface EnrichedArrayBuffer {
+  buffer: ArrayBuffer
+  file: File
+}
+interface FileUploadState {
   error: string | null
-
-  /**
-   * Handler for file selection changes.
-   */
-  handleFileChange: (event: React.ChangeEvent<HTMLInputElement>) => void
-
-  /**
-   * Removes a file from the list of uploaded files.
-   * - If `multiple` is true: Remove a file by index.
-   * - If `multiple` is false: Removes the single file.
-   */
-  removeFile: (index?: number) => void
-
-  /**
-   * Ref for the file input element.
-   */
-  inputRef: MutableRefObject<HTMLInputElement | null>
-
-  /**
-   * Triggers the file input for manual upload.
-   */
-  onUploadTrigger: () => void
-
-  /**
-   * Handler for the drop event to handle file drop directly.
-   */
-  onDropTrigger: (event: React.DragEvent<HTMLDivElement>) => void
+  onRemove: (index?: number) => void
+  progress: number | null
+  data: EnrichedArrayBuffer[]
+  isDragging: boolean
+  inputProps: {
+    ref: React.RefObject<HTMLInputElement | null>
+    onClick: () => void
+    type: 'file'
+    style: { display: 'none' }
+    accept?: string
+    multiple?: boolean
+    disabled?: boolean
+    onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
+  }
+  rootProps: {
+    ref: React.RefObject<HTMLDivElement | null>
+    onClick: () => void
+    onDragEnter: (e: React.DragEvent<HTMLDivElement>) => void
+    onDragOver: (e: React.DragEvent<HTMLDivElement>) => void
+    onDragLeave: (e: React.DragEvent<HTMLDivElement>) => void
+    onDrop: (e: React.DragEvent<HTMLDivElement>) => void
+    'data-dragging': boolean
+  }
 }
 
-/**
- * Custom hook for managing file uploads with validation, preview generation,
- * and a maximum file count limit (e.g., if you pass 4 then only 4 files are allowed).
- *
- * @param options Configuration options for file upload:
- * - `allowedTypes` (Array of AllowedFileType): Allowed MIME types.
- * - `maxFileSize` (number): Maximum file size in bytes (default is 10MB).
- * - `multiple` (boolean): Whether multiple files can be uploaded (default is false).
- * - `maxFiles` (number): Maximum number of files allowed (only when multiple is true).
- *
- * @returns A result object containing files, preview URLs, base64 data, error state,
- *          and various handlers for managing file uploads.
- */
-const useMuntahaDrop = <T extends boolean>(
+const useMuntahaDrop = (
   options: {
-    allowedTypes?: AllowedFileType[]
-    maxFileSize?: number
-    multiple?: T
+    accepts?: AcceptFileTypes[]
+    minSize?: number
+    maxSize?: number
     maxFiles?: number
+    multiple?: boolean
+    disabled?: boolean
+    onDrop?: (files: File[] | File) => void
   } = {}
-): UseFileUploadResult<T> => {
+): FileUploadState => {
   const {
-    allowedTypes = [
-      'image/jpeg',
-      'image/png',
-      'image/gif',
-      'image/webp',
-      'image/jpg',
-      'image/bmp',
-      'image/tiff',
-      'image/svg+xml',
-      'application/pdf',
-      'text/plain',
-      'text/csv',
-      'video/mp4',
-      'video/webm',
-      'video/ogg',
-      'audio/mpeg',
-      'audio/wav',
-      'audio/ogg',
-      'audio/aac',
-    ],
-    maxFileSize = 10 * 1024 * 1024,
-    multiple = false as T,
-    maxFiles, // Maximum number of files allowed (only for multiple files)
+    accepts = ['*'],
+    maxSize = 10 * 1024 * 1024,
+    minSize,
+    multiple = false,
+    disabled = false,
+    maxFiles,
+    onDrop,
   } = options
 
-  const [files, setFiles] = useState<T extends true ? File[] : File | null>(
-    (multiple ? [] : null) as T extends true ? File[] : File | null
-  )
-  const [previewUrls, setPreviewUrls] = useState<
-    T extends true ? string[] : string | null
-  >((multiple ? [] : null) as T extends true ? string[] : string | null)
-  const [binaryData, setBinaryData] = useState<
-    T extends true ? string[] : string | null
-  >((multiple ? [] : null) as T extends true ? string[] : string | null)
+  const inputRef = useRef<HTMLInputElement>(null)
+  const rootRef = useRef<HTMLDivElement>(null)
   const [error, setError] = useState<string | null>(null)
+  const [progress, setProgress] = useState<number | null>(null)
+  const [data, setData] = useState<EnrichedArrayBuffer[]>([])
+  const [isDragging, setIsDragging] = useState<boolean>(false)
 
-  // Ref for the file input element
-  const inputRef = useRef<HTMLInputElement | null>(null)
+  const [files, setFiles] = useState<File[]>([])
 
-  /**
-   * Validates the file type and size.
-   */
+  const onClick = useCallback(() => {
+    if (inputRef.current && !disabled) {
+      inputRef.current?.click()
+    }
+  }, [disabled])
+
   const validateFile = useCallback(
     (file: File): boolean => {
-      const isValidType = allowedTypes.includes(file.type as AllowedFileType)
-      const isValidSize = file.size <= maxFileSize
-      if (!isValidType) {
+      const fileSize = file.size
+      const fileType = file.type
+
+      if (fileSize > maxSize) {
         setError(
-          `Invalid file type: ${file.type}. Allowed types are: ${allowedTypes.join(
+          `File size exceeds the maximum limit of ${(
+            maxSize /
+            1024 /
+            1024
+          ).toFixed(2)} MB.`
+        )
+        return false
+      }
+
+      if (minSize && fileSize < minSize) {
+        setError(
+          `File size is below the minimum limit of ${(
+            minSize /
+            1024 /
+            1024
+          ).toFixed(2)} MB.`
+        )
+
+        return false
+      }
+
+      if (
+        !accepts.includes('*') &&
+        !accepts.some((accept) => {
+          if (accept.endsWith('/*')) {
+            return fileType.startsWith(accept.split('/*')[0])
+          }
+          return accept === fileType
+        })
+      ) {
+        setError(
+          `File type "${fileType}" is not allowed. Accepted types: ${accepts.join(
             ', '
           )}`
         )
         return false
       }
-      if (!isValidSize) {
-        setError(
-          `File size must be smaller than ${maxFileSize / (1024 * 1024)} MB`
-        )
-        return false
-      }
+
       setError(null)
       return true
     },
-    [allowedTypes, maxFileSize]
+    [accepts, maxSize, minSize]
   )
 
-  /**
-   * Handles file selection changes, validates files,
-   * and generates preview URLs and base64 data.
-   */
-  const handleFileChange = useCallback(
-    async (event: React.ChangeEvent<HTMLInputElement>) => {
-      let selectedFiles = Array.from(event.target.files || [])
-      let validFiles = selectedFiles.filter(validateFile)
+  const readFiles = (files: File[]): Promise<EnrichedArrayBuffer[]> => {
+    const totalSize = files.reduce((sum, file) => sum + file.size, 0)
+    let totalLoaded = 0
+    const lastLoadedMap = new WeakMap<FileReader, number>()
 
-      if (multiple && maxFiles) {
-        // Determine how many files are already stored
-        const currentCount = Array.isArray(files) ? files.length : 0
-        if (currentCount >= maxFiles) {
-          setError(`Maximum of ${maxFiles} files already uploaded.`)
-          return
-        }
-        // Limit the number of new files if necessary
-        if (currentCount + validFiles.length > maxFiles) {
-          setError(
-            `You can only upload ${
-              maxFiles - currentCount
-            } more file${maxFiles - currentCount > 1 ? 's' : ''}.`
-          )
-          validFiles = validFiles.slice(0, maxFiles - currentCount)
-        }
-      }
-
-      if (multiple) {
-        const fileReadPromises = validFiles.map((file) => {
-          return new Promise<{
-            file: File
-            previewUrl: string
-            base64: string
-          }>((resolve, reject) => {
+    return Promise.all(
+      files.map(
+        (file) =>
+          new Promise<EnrichedArrayBuffer>((resolve, reject) => {
             const reader = new FileReader()
+
+            reader.onabort = () => {
+              setError('File reading aborted')
+              setProgress(null)
+              reject(new Error('File reading aborted'))
+            }
+
+            reader.onerror = () => {
+              setError('Error reading file')
+              setProgress(null)
+              reject(new Error('Error reading file'))
+            }
+
+            reader.onprogress = (event) => {
+              if (event.lengthComputable) {
+                const lastLoaded = lastLoadedMap.get(reader) || 0
+                const loadedDelta = event.loaded - lastLoaded
+                totalLoaded += loadedDelta
+                lastLoadedMap.set(reader, event.loaded)
+
+                const percent = Math.round((totalLoaded / totalSize) * 100)
+                setProgress(percent)
+              }
+            }
+
+            reader.onloadstart = () => {
+              lastLoadedMap.set(reader, 0)
+            }
+
             reader.onloadend = () => {
-              const result = reader.result as string
+              if (!reader.result) {
+                setError('File could not be read')
+                setProgress(null)
+                reject(new Error('File could not be read'))
+                return
+              }
               resolve({
-                file,
-                previewUrl: URL.createObjectURL(file),
-                base64: result,
+                buffer: reader.result as ArrayBuffer,
+                file: file,
               })
             }
-            reader.onerror = () => reject(new Error('Error reading file'))
-            reader.readAsDataURL(file)
-          })
-        })
 
-        try {
-          const results = await Promise.all(fileReadPromises)
-          setFiles(
-            (prev) =>
-              [
-                ...(prev as File[]),
-                ...results.map((r) => r.file),
-              ] as T extends true ? File[] : File | null
-          )
-          setPreviewUrls(
-            (prev) =>
-              [
-                ...(prev as string[]),
-                ...results.map((r) => r.previewUrl),
-              ] as T extends true ? string[] : string | null
-          )
-          setBinaryData(
-            (prev) =>
-              [
-                ...(prev as string[]),
-                ...results.map((r) => r.base64),
-              ] as T extends true ? string[] : string | null
-          )
-        } catch {
-          setError('Error reading one or more files')
+            reader.readAsArrayBuffer(file)
+          })
+      )
+    )
+  }
+
+  const onChange = useCallback(
+    async (e: React.ChangeEvent<HTMLInputElement>) => {
+      if (e.target.files) {
+        const filesArray = Array.from(e.target.files)
+        let validFiles = filesArray.filter(validateFile)
+
+        if (multiple && maxFiles) {
+          const currentCount = files.length
+          if (currentCount >= maxFiles) {
+            setError(`Maximum of ${maxFiles} files already uploaded.`)
+            return false
+          }
+          if (currentCount + validFiles.length > maxFiles) {
+            setError(
+              `You can only upload ${maxFiles - currentCount} more file${
+                maxFiles - currentCount > 1 ? 's' : ''
+              }.`
+            )
+            validFiles = validFiles.slice(0, maxFiles - currentCount)
+
+            return false
+          }
         }
-      } else if (validFiles.length > 0) {
-        const selectedFile = validFiles[0]
-        const reader = new FileReader()
-        reader.onloadend = () => {
-          const result = reader.result as string
-          setFiles(selectedFile as T extends true ? File[] : File | null)
-          setPreviewUrls(
-            URL.createObjectURL(selectedFile) as T extends true
-              ? string[]
-              : string | null
-          )
-          setBinaryData(result as T extends true ? string[] : string | null)
+
+        if (validFiles.length > 0) {
+          try {
+            const result = await readFiles(validFiles)
+
+            setData((prevData) =>
+              multiple ? [...prevData, ...result] : [result[0]]
+            )
+            setFiles((prevFiles) => {
+              const updatedFiles = [...prevFiles, ...validFiles]
+
+              return updatedFiles
+            })
+          } catch (err) {
+            setError(
+              err instanceof Error ? err.message : 'Failed to read files'
+            )
+          }
         }
-        reader.onerror = () => setError('Error reading file')
-        reader.readAsDataURL(selectedFile)
       }
     },
-    [validateFile, multiple, maxFiles, files]
+    [files, maxFiles, multiple, validateFile]
   )
 
-  /**
-   * Removes a file from the upload list.
-   * - For multiple files, removes by index.
-   * - For single file upload, clears the file.
-   */
-  const removeFile = useCallback(
+  useEffect(() => {
+    if (onDrop) {
+      onDrop(multiple ? files : [files[0]])
+    }
+  }, [files, multiple, onDrop])
+
+  const onRemove = useCallback(
     (index?: number) => {
       if (multiple) {
         if (typeof index === 'number') {
-          setFiles(
-            (prev) =>
-              (prev as File[]).filter((_, i) => i !== index) as T extends true
-                ? File[]
-                : File | null
-          )
-          setPreviewUrls(
-            (prev) =>
-              (prev as string[]).filter((_, i) => i !== index) as T extends true
-                ? string[]
-                : string | null
-          )
-          setBinaryData(
-            (prev) =>
-              (prev as string[]).filter((_, i) => i !== index) as T extends true
-                ? string[]
-                : string | null
-          )
+          setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index))
+          setData((prevData) => prevData.filter((_, i) => i !== index))
+        } else {
+          setFiles([])
+          setData([])
         }
       } else {
-        setFiles(null as T extends true ? File[] : File | null)
-        setPreviewUrls(null as T extends true ? string[] : string | null)
-        setBinaryData(null as T extends true ? string[] : string | null)
+        setFiles([])
+        setData([])
       }
-
-      // Reset the input field value
-      if (inputRef.current) {
-        inputRef.current.value = ''
-      }
+      setError(null)
+      setProgress(null)
     },
     [multiple]
   )
 
-  /**
-   * Triggers the file input manually.
-   */
-  const onUploadTrigger = useCallback(() => {
-    inputRef.current?.click()
+  const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
   }, [])
 
-  /**
-   * Handles file drop events.
-   */
-  const onDropTrigger = useCallback(
+  const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(true)
+  }, [])
+
+  const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault()
+    e.stopPropagation()
+    setIsDragging(false)
+  }, [])
+
+  const handleDrop = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
       event.preventDefault()
-      event.stopPropagation()
-      const droppedFiles = Array.from(event.dataTransfer.files)
-      let validFiles = droppedFiles.filter(validateFile)
-      if (multiple && maxFiles) {
-        const currentCount = Array.isArray(files) ? files.length : 0
-        if (currentCount >= maxFiles) {
-          setError(`Maximum of ${maxFiles} files already uploaded.`)
-          return
-        }
-        if (currentCount + validFiles.length > maxFiles) {
-          setError(
-            `You can only upload ${
-              maxFiles - currentCount
-            } more file${maxFiles - currentCount > 1 ? 's' : ''}.`
-          )
-          validFiles = validFiles.slice(0, maxFiles - currentCount)
-        }
-      }
-      if (validFiles.length > 0) {
-        handleFileChange({
-          target: { files: validFiles as unknown },
+      setIsDragging(false)
+
+      if (event.dataTransfer.files) {
+        const fileList = Array.from(event.dataTransfer.files)
+        onChange({
+          target: { files: fileList as unknown },
         } as React.ChangeEvent<HTMLInputElement>)
       }
     },
-    [validateFile, handleFileChange, multiple, maxFiles, files]
+    [onChange]
   )
 
   return {
-    files,
-    previewUrls,
-    binaryData,
+    data,
     error,
-    handleFileChange,
-    removeFile,
-    inputRef,
-    onUploadTrigger,
-    onDropTrigger,
+    onRemove,
+    progress,
+    isDragging,
+    inputProps: {
+      ref: inputRef,
+      onClick,
+      type: 'file',
+      style: { display: 'none' },
+      accept: accepts.join(','),
+      multiple: multiple,
+      onChange: onChange,
+    },
+    rootProps: {
+      ref: rootRef,
+      onClick,
+      onDragEnter: handleDragEnter,
+      onDragOver: handleDragOver,
+      onDragLeave: handleDragLeave,
+      onDrop: handleDrop,
+      'data-dragging': isDragging,
+    },
   }
 }
 

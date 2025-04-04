@@ -1,5 +1,6 @@
 # Ignore the source TypeScript files, as only compiled JS is needed in the package
 src/
+.vscode/
 
 # Ignore TypeScript configuration and build tools
 tsconfig.json

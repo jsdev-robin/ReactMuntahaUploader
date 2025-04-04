@@ -1,165 +1,111 @@
-# react-muntaha-uploader Hook Documentation
+# `useMuntahaDrop` Hook
 
-## Overview
+A React hook for handling file uploads with drag-and-drop support, file validation, and upload progress tracking.
 
-The `react-muntaha-uploader` hook provides an easy way to manage file uploads in React. It handles file selection, validation (based on file type and size), preview generation, base64 encoding, and allows for file removal. This hook supports both single and multiple file uploads, and provides useful metadata about the uploaded files.
+## Installation
 
----
-
-## Parameters
-
-The hook accepts a configuration object with the following properties:
-
-### `allowedTypes` (Optional)
-
-- **Type**: `AllowedFileType[]`
-- **Description**: An array of allowed MIME types for the uploaded files.
-- **Default**: `[
-  'image/jpeg', 'image/png', 'image/gif', 'application/pdf', 'text/plain', 'text/csv', 
-  'video/mp4', 'video/webm', 'video/ogg', 'image/webp', 'image/jpg', 'image/bmp', 
-  'image/tiff', 'image/svg+xml', 'audio/mpeg', 'audio/wav', 'audio/ogg', 'audio/aac'
-]`
-
-### `maxFileSize` (Optional)
-
-- **Type**: `number`
-- **Description**: Maximum allowed file size in bytes.
-- **Default**: `10 * 1024 * 1024` (10MB)
-
-### `multiple` (Optional)
-
-- **Type**: `boolean`
-- **Description**: Whether multiple files can be uploaded at once.
-- **Default**: `false` (single file upload)
-
----
-
-## Return Value
-
-The hook returns an object with the following properties:
-
-### `files`
-
-- **Type**: `T extends true ? File[] : File | null`
-- **Description**: The uploaded files.
-- If `multiple` is `true`, it returns an array of `File` objects.
-- If `multiple` is `false`, it returns a single `File` or `null`.
-
-### `previewUrls`
-
-- **Type**: `T extends true ? string[] : string | null`
-- **Description**: The preview URLs for the uploaded files.
-- If `multiple` is `true`, it returns an array of URLs.
-- If `multiple` is `false`, it returns a single URL or `null`.
-
-### `binaryData`
-
-- **Type**: `T extends true ? string[] : string | null`
-- **Description**: The base64-encoded data of the uploaded files.
-- If `multiple` is `true`, it returns an array of base64 strings.
-- If `multiple` is `false`, it returns a single base64 string or `null`.
-
-### `error`
-
-- **Type**: `string | null`
-- **Description**: Any validation error message, or `null` if no errors.
-
-### `handleFileChange`
-
-- **Type**: `(event: React.ChangeEvent<HTMLInputElement>) => void`
-- **Description**: Handler for file selection changes. It should be used to link to a file input element.
-
-### `removeFile`
-
-- **Type**: `(index?: number) => void`
-- **Description**: Removes a file from the uploaded list.
-- If `multiple` is `true`, the index of the file to be removed should be passed.
-- If `multiple` is `false`, it clears the single file.
-
-### `inputRef`
-
-- **Type**: `MutableRefObject<HTMLInputElement | null>`
-- **Description**: A React ref object for accessing and resetting the file input element programmatically.
-
-### `onUploadTrigger`
-
-- **Type**: `() => void`
-- **Description**: Triggers the file input for manual upload..
-
-### `onDropTrigger`
-
-- **Type**: `(e) => void`
-- **Description**: Handler for the drop event to handle file drop directly.
-
----
-
-## Usage Example
-
-### Single File Upload Example:
-
-```tsx
-import React from 'react'
-import { useMuntahaDrop } from 'react-muntaha-uploader'
-
-const SingleFileUpload = () => {
-  const {
-    previewUrls,
-    binaryData,
-    error,
-    handleFileChange,
-    removeFile,
-    inputRef,
-  } = useMuntahaDrop({
-    multiple: false,
-  })
-
-  return (
-    <div>
-      <input type="file" onChange={handleFileChange} ref={inputRef} />
-      {error && <p>{error}</p>}
-      {previewUrls && (
-        <div>
-          <img src={previewUrls} alt="Preview" width="100" />
-          <button onClick={() => removeFile()}>Remove</button>
-        </div>
-      )}
-    </div>
-  )
-}
+```bash
+npm i react-muntaha-uploader
 ```
 
-### Multiple File Upload Example:
+## Import
 
-```tsx
-import React from 'react'
+```typescript
 import { useMuntahaDrop } from 'react-muntaha-uploader'
+```
 
-const MultipleFileUpload = () => {
-  const {
-    previewUrls,
-    binaryData,
-    error,
-    handleFileChange,
-    removeFile,
-    inputRef,
-  } = useMuntahaDrop({
+## Basic Usage
+
+```typescript
+const { data, error, progress, onRemove, inputProps, rootProps } =
+  useMuntahaDrop({
+    accepts: ['image/*', 'application/pdf'],
+    maxSize: 5 * 1024 * 1024, // 5MB
     multiple: true,
   })
+```
+
+## Return Values
+
+| Property     | Type                       | Description                                         |
+| ------------ | -------------------------- | --------------------------------------------------- |
+| `data`       | `EnrichedArrayBuffer[]`    | Array of uploaded files with their ArrayBuffer data |
+| `error`      | `string \| null`           | Current error message (if any)                      |
+| `progress`   | `number \| null`           | Upload progress percentage (0-100)                  |
+| `onRemove`   | `(index?: number) => void` | Function to remove file(s)                          |
+| `inputProps` | `Object`                   | Props for the hidden file input element             |
+| `rootProps`  | `Object`                   | Props for the drop zone container                   |
+
+## Options
+
+| Option     | Type                              | Default                   | Description                                     |
+| ---------- | --------------------------------- | ------------------------- | ----------------------------------------------- |
+| `accepts`  | `AcceptFileTypes[]`               | `["*"]`                   | Allowed file types (MIME types)                 |
+| `minSize`  | `number`                          | -                         | Minimum file size in bytes                      |
+| `maxSize`  | `number`                          | `10 * 1024 * 1024` (10MB) | Maximum file size in bytes                      |
+| `maxFiles` | `number`                          | -                         | Maximum number of files (when `multiple: true`) |
+| `multiple` | `boolean`                         | `false`                   | Allow multiple file selection                   |
+| `disabled` | `boolean`                         | `false`                   | Disable the file upload                         |
+| `onDrop`   | `(files: File[] \| File) => void` | -                         | Callback when files are dropped/selected        |
+
+## Example Implementation
+
+```tsx
+import { useMuntahaDrop } from 'react-muntaha-uploader'
+
+function FileUpload() {
+  const { data, error, progress, onRemove, rootProps, inputProps } =
+    useMuntahaDrop({
+      accepts: ['image/*', 'application/pdf'],
+      maxSize: 5 * 1024 * 1024,
+      multiple: true,
+    })
 
   return (
-    <div>
-      <input type="file" multiple onChange={handleFileChange} ref={inputRef} />
-      {error && <p>{error}</p>}
-      <div>
-        {previewUrls &&
-          previewUrls.map((url, index) => (
-            <div key={index}>
-              <img src={url} alt={`Preview ${index}`} width="100" />
-              <button onClick={() => removeFile(index)}>Remove</button>
-            </div>
-          ))}
+    <div {...rootProps} className="dropzone">
+      <input {...inputProps} />
+
+      {error && <div className="error">{error}</div>}
+
+      {progress !== null && <progress value={progress} max="100" />}
+
+      <div className="preview">
+        {data.map((file, index) => (
+          <div key={index} className="file-item">
+            <span>{file.file.name}</span>
+            <button onClick={() => onRemove(index)}>Remove</button>
+          </div>
+        ))}
       </div>
+
+      <p>Drag files here or click to browse</p>
     </div>
   )
 }
 ```
+
+## Supported File Types
+
+The hook supports all major file types through the `accepts` option:
+
+- **Images**: `image/*`, `image/jpeg`, `image/png`, etc.
+- **Videos**: `video/*`, `video/mp4`, `video/quicktime`, etc.
+- **Audio**: `audio/*`, `audio/mpeg`, `audio/wav`, etc.
+- **Documents**: `application/pdf`, `.docx`, `.xlsx`, etc.
+- **Archives**: `.zip`, `.rar`, `.tar`, etc.
+- **Code**: `.js`, `.ts`, `.py`, etc.
+
+Use `"*"` to accept all file types.
+
+## Validation
+
+Files are validated against:
+
+- File type (MIME type)
+- Minimum size (if specified)
+- Maximum size (default: 10MB)
+- Maximum file count (when `multiple: true`)
+
+## License
+
+MIT

@@ -1,6 +1,6 @@
 {
   "name": "react-muntaha-uploader",
-  "version": "1.2.5",
+  "version": "2.4.4",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
   "scripts": {
@@ -29,8 +29,8 @@
     "file-management"
   ],
   "dependencies": {
-    "react": "^18.3.1",
-    "react-dom": "^18.3.1"
+    "react": "^19.0.0",
+    "react-dom": "^19.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.25.9",
