@@ -1,6 +1,6 @@
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 
-type AcceptFileTypes =
+type Accept =
   // Images
   | 'image/*'
   | 'image/apng'
@@ -179,66 +179,68 @@ type AcceptFileTypes =
   | 'application/vnd.oasis.opendocument.database'
   | '*' // Wildcard for any type
 
-interface EnrichedArrayBuffer {
-  buffer: ArrayBuffer
-  file: File
+interface RootProps {
+  ref: React.RefObject<HTMLDivElement | null>
+  onClick: () => void
+  onDragEnter: (e: React.DragEvent<HTMLDivElement>) => void
+  onDragOver: (e: React.DragEvent<HTMLDivElement>) => void
+  onDragLeave: (e: React.DragEvent<HTMLDivElement>) => void
+  onDrop: (e: React.DragEvent<HTMLDivElement>) => void
+  'data-dragging': boolean
 }
-interface FileUploadState {
-  error: string | null
+
+interface InputProps {
+  ref: React.RefObject<HTMLInputElement | null>
+  onClick: () => void
+  type: string
+  style: { display: string }
+  accept?: string
+  multiple?: boolean
+  disabled?: boolean
+  onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
+}
+
+interface DropState {
+  data: ArrayBuffer[]
+  progress: Record<number, number>
+  isDragActive: boolean
+  onClick: () => void
   onRemove: (index?: number) => void
-  progress: number | null
-  data: EnrichedArrayBuffer[]
-  isDragging: boolean
-  inputProps: {
-    ref: React.RefObject<HTMLInputElement | null>
-    onClick: () => void
-    type: 'file'
-    style: { display: 'none' }
-    accept?: string
-    multiple?: boolean
-    disabled?: boolean
-    onChange: (event: React.ChangeEvent<HTMLInputElement>) => void
-  }
-  rootProps: {
-    ref: React.RefObject<HTMLDivElement | null>
-    onClick: () => void
-    onDragEnter: (e: React.DragEvent<HTMLDivElement>) => void
-    onDragOver: (e: React.DragEvent<HTMLDivElement>) => void
-    onDragLeave: (e: React.DragEvent<HTMLDivElement>) => void
-    onDrop: (e: React.DragEvent<HTMLDivElement>) => void
-    'data-dragging': boolean
-  }
+  error: string | null
+  inputProps: InputProps
+  rootProps: RootProps
 }
 
-const useMuntahaDrop = (
-  options: {
-    accepts?: AcceptFileTypes[]
-    minSize?: number
-    maxSize?: number
-    maxFiles?: number
-    multiple?: boolean
-    disabled?: boolean
-    onDrop?: (files: File[] | File) => void
-  } = {}
-): FileUploadState => {
-  const {
-    accepts = ['*'],
-    maxSize = 10 * 1024 * 1024,
-    minSize,
-    multiple = false,
-    disabled = false,
-    maxFiles,
-    onDrop,
-  } = options
+interface PropTypes {
+  accept?: Accept[]
+  minSize?: number
+  maxSize?: number
+  maxFiles?: number
+  multiple?: boolean
+  disabled?: boolean
+  onDrop?: (files: File[]) => void
+  onError?: (err: string | null) => void
+}
 
-  const inputRef = useRef<HTMLInputElement>(null)
-  const rootRef = useRef<HTMLDivElement>(null)
+const useMuntahaDrop = (options: PropTypes = {}): DropState => {
+  const inputRef = useRef<HTMLInputElement | null>(null)
+  const rootRef = useRef<HTMLDivElement | null>(null)
   const [error, setError] = useState<string | null>(null)
-  const [progress, setProgress] = useState<number | null>(null)
-  const [data, setData] = useState<EnrichedArrayBuffer[]>([])
-  const [isDragging, setIsDragging] = useState<boolean>(false)
-
+  const [progress, setProgress] = useState<Record<number, number>>({})
+  const [isDragActive, setIsDragActive] = useState<boolean>(false)
+  const [data, setData] = useState<ArrayBuffer[]>([])
   const [files, setFiles] = useState<File[]>([])
+
+  const {
+    accept = ['*'],
+    minSize,
+    maxSize,
+    maxFiles,
+    multiple = true,
+    disabled = false,
+    onDrop,
+    onError,
+  } = options
 
   const onClick = useCallback(() => {
     if (inputRef.current && !disabled) {
@@ -246,21 +248,10 @@ const useMuntahaDrop = (
     }
   }, [disabled])
 
-  const validateFile = useCallback(
+  const validFile = useCallback(
     (file: File): boolean => {
       const fileSize = file.size
       const fileType = file.type
-
-      if (fileSize > maxSize) {
-        setError(
-          `File size exceeds the maximum limit of ${(
-            maxSize /
-            1024 /
-            1024
-          ).toFixed(2)} MB.`
-        )
-        return false
-      }
 
       if (minSize && fileSize < minSize) {
         setError(
@@ -274,17 +265,28 @@ const useMuntahaDrop = (
         return false
       }
 
+      if (maxSize && fileSize > maxSize) {
+        setError(
+          `File size exceeds the maximum limit of ${(
+            maxSize /
+            1024 /
+            1024
+          ).toFixed(2)} MB.`
+        )
+        return false
+      }
+
       if (
-        !accepts.includes('*') &&
-        !accepts.some((accept) => {
-          if (accept.endsWith('/*')) {
-            return fileType.startsWith(accept.split('/*')[0])
+        !accept.includes('*') &&
+        !accept.some((acpt) => {
+          if (acpt.endsWith('/*')) {
+            return fileType.startsWith(acpt.split('/*')[0])
           }
-          return accept === fileType
+          return acpt === fileType
         })
       ) {
         setError(
-          `File type "${fileType}" is not allowed. Accepted types: ${accepts.join(
+          `File type "${fileType}" is not allowed. Accepted types: ${accept.join(
             ', '
           )}`
         )
@@ -292,61 +294,53 @@ const useMuntahaDrop = (
       }
 
       setError(null)
+
       return true
     },
-    [accepts, maxSize, minSize]
+    [accept, maxSize, minSize]
   )
 
-  const readFiles = (files: File[]): Promise<EnrichedArrayBuffer[]> => {
-    const totalSize = files.reduce((sum, file) => sum + file.size, 0)
-    let totalLoaded = 0
-    const lastLoadedMap = new WeakMap<FileReader, number>()
+  const readFiles = (files: File[]): Promise<ArrayBuffer[]> => {
+    const fileProgress = files.reduce(
+      (acc, _, index) => {
+        acc[index] = 0
+        return acc
+      },
+      {} as Record<number, number>
+    )
 
     return Promise.all(
       files.map(
-        (file) =>
-          new Promise<EnrichedArrayBuffer>((resolve, reject) => {
+        (file, index) =>
+          new Promise<ArrayBuffer>((resolve, reject) => {
             const reader = new FileReader()
 
             reader.onabort = () => {
               setError('File reading aborted')
-              setProgress(null)
               reject(new Error('File reading aborted'))
             }
 
             reader.onerror = () => {
               setError('Error reading file')
-              setProgress(null)
               reject(new Error('Error reading file'))
             }
 
             reader.onprogress = (event) => {
               if (event.lengthComputable) {
-                const lastLoaded = lastLoadedMap.get(reader) || 0
-                const loadedDelta = event.loaded - lastLoaded
-                totalLoaded += loadedDelta
-                lastLoadedMap.set(reader, event.loaded)
-
-                const percent = Math.round((totalLoaded / totalSize) * 100)
-                setProgress(percent)
+                const percent = Math.round((event.loaded / event.total) * 100)
+                fileProgress[index] = percent
+                setProgress({ ...fileProgress })
               }
             }
 
-            reader.onloadstart = () => {
-              lastLoadedMap.set(reader, 0)
-            }
-
-            reader.onloadend = () => {
-              if (!reader.result) {
-                setError('File could not be read')
-                setProgress(null)
-                reject(new Error('File could not be read'))
-                return
+            reader.onload = () => {
+              if (reader.result instanceof ArrayBuffer) {
+                fileProgress[index] = 100
+                setProgress({ ...fileProgress })
+                resolve(reader.result)
+              } else {
+                reject(new Error('Invalid file data'))
               }
-              resolve({
-                buffer: reader.result as ArrayBuffer,
-                file: file,
-              })
             }
 
             reader.readAsArrayBuffer(file)
@@ -358,55 +352,37 @@ const useMuntahaDrop = (
   const onChange = useCallback(
     async (e: React.ChangeEvent<HTMLInputElement>) => {
       if (e.target.files) {
-        const filesArray = Array.from(e.target.files)
-        let validFiles = filesArray.filter(validateFile)
+        const fileList = Array.from(e.target.files)
+        const validFileList = fileList.filter(validFile)
 
-        if (multiple && maxFiles) {
-          const currentCount = files.length
-          if (currentCount >= maxFiles) {
-            setError(`Maximum of ${maxFiles} files already uploaded.`)
-            return false
-          }
-          if (currentCount + validFiles.length > maxFiles) {
+        if (maxFiles !== undefined) {
+          if (files.length + validFileList.length > maxFiles) {
             setError(
-              `You can only upload ${maxFiles - currentCount} more file${
-                maxFiles - currentCount > 1 ? 's' : ''
-              }.`
+              `You can only upload up to ${maxFiles} file(s). You tried to add ${validFileList.length} file(s) to existing ${files.length} file(s).`
             )
-            validFiles = validFiles.slice(0, maxFiles - currentCount)
-
             return false
           }
         }
 
-        if (validFiles.length > 0) {
-          try {
-            const result = await readFiles(validFiles)
+        try {
+          if (validFileList.length > 0) {
+            setFiles((prevFileList) => [...prevFileList, ...validFileList])
+
+            const result = await readFiles(validFileList)
 
             setData((prevData) =>
               multiple ? [...prevData, ...result] : [result[0]]
             )
-            setFiles((prevFiles) => {
-              const updatedFiles = [...prevFiles, ...validFiles]
-
-              return updatedFiles
-            })
-          } catch (err) {
-            setError(
-              err instanceof Error ? err.message : 'Failed to read files'
-            )
           }
+        } catch (error) {
+          setError(
+            error instanceof Error ? error.message : 'Failed to read files'
+          )
         }
       }
     },
-    [files, maxFiles, multiple, validateFile]
+    [files.length, maxFiles, multiple, validFile]
   )
-
-  useEffect(() => {
-    if (onDrop) {
-      onDrop(multiple ? files : [files[0]])
-    }
-  }, [files, multiple, onDrop])
 
   const onRemove = useCallback(
     (index?: number) => {
@@ -414,16 +390,22 @@ const useMuntahaDrop = (
         if (typeof index === 'number') {
           setFiles((prevFiles) => prevFiles.filter((_, i) => i !== index))
           setData((prevData) => prevData.filter((_, i) => i !== index))
+          setProgress((prev) => {
+            const newProgress = { ...prev }
+            delete newProgress[index]
+            return newProgress
+          })
         } else {
           setFiles([])
           setData([])
+          setProgress({})
         }
       } else {
         setFiles([])
         setData([])
+        setProgress({})
       }
       setError(null)
-      setProgress(null)
     },
     [multiple]
   )
@@ -431,25 +413,25 @@ const useMuntahaDrop = (
   const handleDragEnter = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     e.stopPropagation()
-    setIsDragging(true)
+    setIsDragActive(true)
   }, [])
 
   const handleDragOver = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     e.stopPropagation()
-    setIsDragging(true)
+    setIsDragActive(true)
   }, [])
 
   const handleDragLeave = useCallback((e: React.DragEvent<HTMLDivElement>) => {
     e.preventDefault()
     e.stopPropagation()
-    setIsDragging(false)
+    setIsDragActive(false)
   }, [])
 
   const handleDrop = useCallback(
     (event: React.DragEvent<HTMLDivElement>) => {
       event.preventDefault()
-      setIsDragging(false)
+      setIsDragActive(false)
 
       if (event.dataTransfer.files) {
         const fileList = Array.from(event.dataTransfer.files)
@@ -461,30 +443,52 @@ const useMuntahaDrop = (
     [onChange]
   )
 
-  return {
-    data,
-    error,
-    onRemove,
-    progress,
-    isDragging,
-    inputProps: {
+  useEffect(() => {
+    if (onDrop) {
+      onDrop(files)
+    }
+  }, [files, onDrop])
+
+  useEffect(() => {
+    if (onError) {
+      onError(error)
+    }
+  }, [error, onError])
+
+  const getInputProps = (): InputProps => {
+    return {
       ref: inputRef,
       onClick,
       type: 'file',
       style: { display: 'none' },
-      accept: accepts.join(','),
-      multiple: multiple,
-      onChange: onChange,
-    },
-    rootProps: {
+      accept: accept.join(','),
+      multiple,
+      disabled,
+      onChange,
+    }
+  }
+
+  const getRootProps = (): RootProps => {
+    return {
       ref: rootRef,
-      onClick,
+      onClick: () => inputRef.current?.click(),
       onDragEnter: handleDragEnter,
       onDragOver: handleDragOver,
       onDragLeave: handleDragLeave,
       onDrop: handleDrop,
-      'data-dragging': isDragging,
-    },
+      'data-dragging': isDragActive,
+    }
+  }
+
+  return {
+    data,
+    progress,
+    isDragActive,
+    onClick,
+    onRemove,
+    error,
+    inputProps: getInputProps(),
+    rootProps: getRootProps(),
   }
 }
 
