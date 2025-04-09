@@ -63,20 +63,58 @@ Configuration options for the hook:
 | `onDrop`   | `function` | -       | Callback when files are dropped/selected |
 | `onError`  | `function` | -       | Error callback                           |
 
+### `Data`
+
+```typescript
+interface EnrichedArrayBuffer {
+  buffer: ArrayBuffer
+  file: File
+}
+```
+
 ### `DropState`
 
 Return object from the hook:
 
 | Property       | Type                       | Description                                        |
 | -------------- | -------------------------- | -------------------------------------------------- |
-| `data`         | `ArrayBuffer[]`            | Array of file data as ArrayBuffers                 |
-| `progress`     | `Record<number, number>`   | Upload progress by file index                      |
+| `getFile`      | `File[] \| null`           | Array of file data as File List                    |
+| `getData`      | `EnrichedArrayBuffer[]`    | Array of file data as ArrayBuffers                 |
+| `getProgress`  | `Record<number, number>`   | Upload progress by file index                      |
 | `isDragActive` | `boolean`                  | Whether files are being dragged over the drop zone |
 | `onClick`      | `() => void`               | Function to trigger file selection                 |
 | `onRemove`     | `(index?: number) => void` | Function to remove file(s)                         |
 | `error`        | `string \| null`           | Current error message                              |
 | `inputProps`   | `InputProps`               | Props for the hidden file input                    |
 | `rootProps`    | `RootProps`                | Props for the root drop zone element               |
+
+## Simple Example
+
+```typescript
+import { useMuntahaDrop } from 'react-muntaha-uploader'
+
+function FileUpload() {
+  const {
+    inputProps,
+    rootProps,
+  } = useMuntahaDrop({
+    accept: ['image/*', 'application/pdf'],
+    maxSize: 5 * 1024 * 1024, // 5MB
+    maxFiles: 3,
+    onDrop: (files) => console.log('Files dropped:', files),
+    onError: (err) => console.error('Error:', err),
+  });
+
+  return (
+    <div {...rootProps}>
+      <input {...inputProps} />
+      <p>Drag and drop files here or click to select</p>
+    </div>
+  );
+}
+
+
+```
 
 ## Usage Example
 
@@ -85,33 +123,68 @@ import { useMuntahaDrop } from 'react-muntaha-uploader'
 
 function FileUpload() {
   const {
-    data,
-    progress,
     isDragActive,
     error,
+    onClick,
+    onRemove,
+    getFile,
+    getData,
+    getProgress,
     inputProps,
-    rootProps
-  } = useMuntahaDrop ({
+    rootProps,
+  } = useMuntahaDrop({
     accept: ['image/*', 'application/pdf'],
     maxSize: 5 * 1024 * 1024, // 5MB
     maxFiles: 3,
     onDrop: (files) => console.log('Files dropped:', files),
-    onError: (err) => console.error('Error:', err)
+    onError: (err) => console.error('Error:', err),
   });
 
+  const files = getFile() ?? [];
+  const progress = getProgress() ?? {};
+
   return (
-    <div {...rootProps} style={{ border: isDragActive ? '2px dashed blue' : '2px dashed gray' }}>
+    <div
+      {...rootProps}
+      className={cn(
+        "border-2 p-4 rounded-md transition-colors",
+        isDragActive ? "border-blue-500" : "border-gray-300"
+      )}
+      onClick={onClick}
+    >
       <input {...inputProps} />
-      <p>Drag and drop files here or click to select</p>
-      {error && <div className="error">{error}</div>}
-      <div>
-        {Object.entries(progress).map(([index, percent]) => (
-          <div key={index}>
-            File {index}: {percent}%
+      <p className="mb-2 text-sm text-gray-500">Drag and drop files here or click to select</p>
+
+      {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
+
+      <div className="space-y-2">
+        {files.map((file, index) => (
+          <div key={index} className="flex items-center justify-between gap-2">
+            <span className="text-sm">{file.name}</span>
+            <button
+              type="button"
+              onClick={() => onRemove(index)}
+              className="text-xs text-red-500 hover:underline"
+            >
+              Remove
+            </button>
           </div>
         ))}
       </div>
+
+      {getProgress() &&
+        Object.entries(getProgress()).map(([key, value]) => (
+          <Progress
+            key={key}
+            value={value}
+            className={cn("mt-2", {
+              "bg-green-500": value === 100,
+            })}
+          />
+        ))}
     </div>
   );
 }
+
+
 ```
