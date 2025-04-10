@@ -1,3 +1,5 @@
+'use client'
+
 import React, { useCallback, useEffect, useRef, useState } from 'react'
 
 /**
@@ -228,8 +230,8 @@ interface DropState {
   error: string | null
   inputProps: InputProps
   rootProps: RootProps
-  getFile: (index?: number) => File | null
-  getData: (index?: number) => EnrichedArrayBuffer[]
+  getFile: (index?: number) => File[] | null
+  getData: (index?: number) => EnrichedArrayBuffer[] | null
   getProgress: (index?: number) => number | Record<number, number>
 }
 
@@ -450,6 +452,10 @@ const useMuntahaDrop = (options: PropTypes = {}): DropState => {
    */
   const onRemove = useCallback(
     (index?: number) => {
+      if (inputRef.current) {
+        inputRef.current.value = ''
+      }
+
       if (multiple) {
         if (typeof index === 'number') {
           setFiles((prev) => {
@@ -487,10 +493,6 @@ const useMuntahaDrop = (options: PropTypes = {}): DropState => {
       }
 
       setError(null)
-
-      if (inputRef.current) {
-        inputRef.current.value = ''
-      }
     },
     [multiple, onDrop]
   )
@@ -545,11 +547,16 @@ const useMuntahaDrop = (options: PropTypes = {}): DropState => {
   )
 
   // Call onDrop callback when files change
+  const onDropRef = useRef(onDrop)
   useEffect(() => {
-    if (onDrop && files && files.length > 0) {
-      onDrop(files)
+    onDropRef.current = onDrop
+  }, [onDrop])
+
+  useEffect(() => {
+    if (files.length > 0) {
+      onDropRef.current?.(files)
     }
-  }, [files, onDrop])
+  }, [files])
 
   // Call onError callback when error changes
   useEffect(() => {
@@ -599,11 +606,11 @@ const useMuntahaDrop = (options: PropTypes = {}): DropState => {
    * @returns {File | null} The requested File object if found, otherwise null
    */
   const getFile = useCallback(
-    (index?: number): File | null => {
+    (index?: number): File[] | null => {
       if (index !== undefined) {
-        return files[index] || null
+        return files[index] ? [files[index]] : []
       }
-      return files[0] || null
+      return [...files]
     },
     [files]
   )

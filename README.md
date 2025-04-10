@@ -76,17 +76,17 @@ interface EnrichedArrayBuffer {
 
 Return object from the hook:
 
-| Property       | Type                       | Description                                        |
-| -------------- | -------------------------- | -------------------------------------------------- |
-| `getFile`      | `File[] \| null`           | Array of file data as File List                    |
-| `getData`      | `EnrichedArrayBuffer[]`    | Array of file data as ArrayBuffers                 |
-| `getProgress`  | `Record<number, number>`   | Upload progress by file index                      |
-| `isDragActive` | `boolean`                  | Whether files are being dragged over the drop zone |
-| `onClick`      | `() => void`               | Function to trigger file selection                 |
-| `onRemove`     | `(index?: number) => void` | Function to remove file(s)                         |
-| `error`        | `string \| null`           | Current error message                              |
-| `inputProps`   | `InputProps`               | Props for the hidden file input                    |
-| `rootProps`    | `RootProps`                | Props for the root drop zone element               |
+| Property       | Type                            | Description                                        |
+| -------------- | ------------------------------- | -------------------------------------------------- |
+| `getFile`      | `File[] \| null`                | Array of file data as File List                    |
+| `getData`      | `EnrichedArrayBuffer[] \| null` | Array of file data as ArrayBuffers                 |
+| `getProgress`  | `Record<number, number>`        | Upload progress by file index                      |
+| `isDragActive` | `boolean`                       | Whether files are being dragged over the drop zone |
+| `onClick`      | `() => void`                    | Function to trigger file selection                 |
+| `onRemove`     | `(index?: number) => void`      | Function to remove file(s)                         |
+| `error`        | `string \| null`                | Current error message                              |
+| `inputProps`   | `InputProps`                    | Props for the hidden file input                    |
+| `rootProps`    | `RootProps`                     | Props for the root drop zone element               |
 
 ## Simple Example
 
