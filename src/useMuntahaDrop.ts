@@ -257,6 +257,8 @@ interface EnhancedDropZoneState<T extends boolean> {
     getData: (index?: number) => ArrayBufferState<T>
     /** Get progress by index or all progress */
     getProgress: (index?: number) => number | Record<number, number>
+    // Reset Input
+    reset: () => void
   }
   /** Props to spread on the root drop zone element */
   getRootProps: () => {
@@ -645,6 +647,22 @@ const useMuntahaDrop = <T extends boolean = true>(
   )
 
   /**
+   * Resets the input field
+   */
+  const resetInput = useCallback(() => {
+    if (inputRef.current) {
+      inputRef.current.value = ''
+      setFiles(null as FileState<T>)
+      setArrayBuffer(null as ArrayBufferState<T>)
+      setProgress({})
+      setError(null)
+      setStatus('idle')
+      abortController.current.abort()
+      activeReaders.current.forEach((reader) => reader.abort())
+      activeReaders.current.clear()
+    }
+  }, [])
+  /**
    * Opens the file selection dialog
    */
   const openDialog = useCallback(() => {
@@ -857,6 +875,7 @@ const useMuntahaDrop = <T extends boolean = true>(
       getFile,
       getData,
       getProgress,
+      reset: resetInput,
     },
   }
 }

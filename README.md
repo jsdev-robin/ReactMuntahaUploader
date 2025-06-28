@@ -1,190 +1,169 @@
-# useMuntahaDrop Hook
+# react-muntaha-uploader
 
-![File Upload](https://img.icons8.com/fluency/48/000000/upload--v1.png)  
-_A React hook for professional-grade file uploads with drag-and-drop, validation, and progress tracking_
-
----
-
-## 🚀 Features
-
-| Feature                | Description                                                       |
-| ---------------------- | ----------------------------------------------------------------- |
-| **Large File Support** | Handles multi-GB files with chunked reading and progress tracking |
-| **Smart Validation**   | 150+ MIME types, size limits, and max files enforcement           |
-| **Dual Upload Modes**  | Drag-and-drop + traditional file selector                         |
-| **Real-time Feedback** | Progress percentages for each file                                |
-| **Error Resilient**    | Clear error messages for invalid files                            |
-
-## 💡 Perfect For
-
-- Cloud storage applications
-- Media uploads (4K videos, RAW images)
-- Bulk document processing
-- Enterprise file transfer systems
-
----
+A flexible, feature-rich React hook for robust file uploads with drag-and-drop, folder support, validation, progress tracking, abort, and more.
 
 ## Features
 
-- Drag and drop file uploads
-- File selection via input
-- File type validation
-- File size validation (min/max)
-- Multiple file support
-- Upload progress tracking
-- Error handling
+- **Drag-and-drop** file uploads
+- **Folder upload** (with browser support)
+- **Single or multiple file selection**
+- **MIME type** and **file size validation**
+- **Progress tracking** for reads
+- **Abort**able reads
+- **ArrayBuffer** support for binary reads
+- **Keyboard accessibility**
+- **Error handling** and callbacks
+- **Accessible** attributes for screen readers
 
-## Type Definitions
+## Installation
 
-### `Accept`
-
-A union type representing all acceptable file MIME types, including:
-
-- Images (`image/*`, `image/png`, `image/jpeg`, etc.)
-- Videos (`video/*`, `video/mp4`, `video/quicktime`, etc.)
-- Audio (`audio/*`, `audio/mp3`, `audio/wav`, etc.)
-- Documents (`application/pdf`, `text/plain`, `application/json`, etc.)
-- Archives (`application/zip`, `application/x-rar-compressed`, etc.)
-- Fonts (`font/ttf`, `font/woff2`, etc.)
-- Programming files (`application/javascript`, `application/typescript`, etc.)
-
-### `PropTypes`
-
-Configuration options for the hook:
-
-| Property   | Type       | Default | Description                              |
-| ---------- | ---------- | ------- | ---------------------------------------- |
-| `accept`   | `Accept[]` | `["*"]` | Allowed file types                       |
-| `minSize`  | `number`   | -       | Minimum file size in bytes               |
-| `maxSize`  | `number`   | -       | Maximum file size in bytes               |
-| `maxFiles` | `number`   | -       | Maximum number of files                  |
-| `multiple` | `boolean`  | `true`  | Allow multiple files                     |
-| `disabled` | `boolean`  | `false` | Disable the drop zone                    |
-| `onDrop`   | `function` | -       | Callback when files are dropped/selected |
-| `onError`  | `function` | -       | Error callback                           |
-
-### `Data`
-
-```typescript
-interface EnrichedArrayBuffer {
-  buffer: ArrayBuffer
-  file: File
-}
+```bash
+npm install react-muntaha-uploader
+# or
+yarn add react-muntaha-uploader
 ```
 
-### `DropState`
+## Quick Start
 
-Return object from the hook:
+```jsx
+'use client'
 
-| Property       | Type                            | Description                                        |
-| -------------- | ------------------------------- | -------------------------------------------------- |
-| `getFile`      | `File[] \| null`                | Array of file data as File List                    |
-| `getData`      | `EnrichedArrayBuffer[] \| null` | Array of file data as ArrayBuffers                 |
-| `getProgress`  | `Record<number, number>`        | Upload progress by file index                      |
-| `isDragActive` | `boolean`                       | Whether files are being dragged over the drop zone |
-| `onClick`      | `() => void`                    | Function to trigger file selection                 |
-| `onRemove`     | `(index?: number) => void`      | Function to remove file(s)                         |
-| `error`        | `string \| null`                | Current error message                              |
-| `inputProps`   | `InputProps`                    | Props for the hidden file input                    |
-| `rootProps`    | `RootProps`                     | Props for the root drop zone element               |
-
-## Simple Example
-
-```typescript
+import React from 'react'
 import { useMuntahaDrop } from 'react-muntaha-uploader'
 
-function FileUpload() {
+export default function MyUploader() {
   const {
-    inputProps,
-    rootProps,
-  } = useMuntahaDrop({
-    accept: ['image/*', 'application/pdf'],
-    maxSize: 5 * 1024 * 1024, // 5MB
-    maxFiles: 3,
-    onDrop: (files) => console.log('Files dropped:', files),
-    onError: (err) => console.error('Error:', err),
-  });
-
-  return (
-    <div {...rootProps}>
-      <input {...inputProps} />
-      <p>Drag and drop files here or click to select</p>
-    </div>
-  );
-}
-
-
-```
-
-## Usage Example
-
-```typescript
-import { useMuntahaDrop } from 'react-muntaha-uploader'
-
-function FileUpload() {
-  const {
-    isDragActive,
+    files,
+    progress,
     error,
-    onClick,
-    onRemove,
-    getFile,
-    getData,
-    getProgress,
-    inputProps,
-    rootProps,
+    isDragActive,
+    onDelete,
+    abortUpload,
+    getRootProps,
+    getInputProps,
+    status,
+    utils,
   } = useMuntahaDrop({
     accept: ['image/*', 'application/pdf'],
     maxSize: 5 * 1024 * 1024, // 5MB
-    maxFiles: 3,
-    onDrop: (files) => console.log('Files dropped:', files),
-    onError: (err) => console.error('Error:', err),
-  });
-
-  const files = getFile() ?? [];
-  const progress = getProgress() ?? {};
+    multiple: true,
+    isArrayBuffer: false,
+    onDrop: (files) => {
+      console.log('Files dropped:', files)
+    },
+    onError: (err) => {
+      if (err) alert(err)
+    },
+    enableFolderUpload: true,
+  })
 
   return (
     <div
-      {...rootProps}
-      className={cn(
-        "border-2 p-4 rounded-md transition-colors",
-        isDragActive ? "border-blue-500" : "border-gray-300"
-      )}
-      onClick={onClick}
+      {...getRootProps()}
+      style={{
+        border: '2px dashed #aaa',
+        padding: 32,
+        background: isDragActive ? '#eef' : '#fff',
+      }}
     >
-      <input {...inputProps} />
-      <p className="mb-2 text-sm text-gray-500">Drag and drop files here or click to select</p>
-
-      {error && <div className="text-red-500 text-sm mb-2">{error}</div>}
-
-      <div className="space-y-2">
-        {files.map((file, index) => (
-          <div key={index} className="flex items-center justify-between gap-2">
-            <span className="text-sm">{file.name}</span>
-            <button
-              type="button"
-              onClick={() => onRemove(index)}
-              className="text-xs text-red-500 hover:underline"
-            >
-              Remove
-            </button>
-          </div>
-        ))}
-      </div>
-
-      {getProgress() &&
-        Object.entries(getProgress()).map(([key, value]) => (
-          <Progress
-            key={key}
-            value={value}
-            className={cn("mt-2", {
-              "bg-green-500": value === 100,
-            })}
-          />
-        ))}
+      <input {...getInputProps()} />
+      <p>
+        {isDragActive ? 'Drop files here...' : 'Drag files, or click to select'}
+      </p>
+      {error && <div style={{ color: 'red' }}>{error}</div>}
+      {status === 'reading' && <div>Uploading...</div>}
+      {Array.isArray(files) && files.length > 0 && (
+        <ul>
+          {files.map((file, idx) => (
+            <li key={idx}>
+              {file.name} ({(file.size / 1024).toFixed(1)} KB)
+              <button onClick={() => onDelete(idx)}>Delete</button>
+              <span> Progress: {progress[idx] || 0}%</span>
+            </li>
+          ))}
+        </ul>
+      )}
+      <button onClick={abortUpload}>Abort Upload</button>
+      <button onClick={utils.reset}>Reset</button>
     </div>
-  );
+  )
 }
-
-
 ```
+
+---
+
+## API
+
+### `useMuntahaDrop<T extends boolean = true>(options?: DropZoneOptions<T>): EnhancedDropZoneState<T>`
+
+A React hook for handling file drops with advanced features.
+
+#### Options (`DropZoneOptions<T>`)
+
+| Name                 | Type                   | Default | Description                                               |
+| -------------------- | ---------------------- | ------- | --------------------------------------------------------- |
+| `accept`             | `MimeType[]`           | `['*']` | Allowed mime types (see below for all values)             |
+| `minSize`            | `number`               | —       | Minimum file size in bytes                                |
+| `maxSize`            | `number`               | —       | Maximum file size in bytes                                |
+| `maxFiles`           | `number`               | —       | Max files allowed (only for `multiple: true`)             |
+| `multiple`           | `boolean`              | `true`  | Allow multiple file selection                             |
+| `disabled`           | `boolean`              | `false` | Disable the dropzone                                      |
+| `isArrayBuffer`      | `boolean`              | `false` | If true, reads files as ArrayBuffer instead of File       |
+| `onDrop`             | `(files) => void`      | —       | Called when files are dropped or selected                 |
+| `onError`            | `(err: string\| null)` | —       | Called on error events                                    |
+| `enableFolderUpload` | `boolean`              | `false` | Allow selecting entire folders (browser support required) |
+| `enableKeyboard`     | `boolean`              | `true`  | Enable keyboard navigation for dropzone                   |
+
+#### Return Value (`EnhancedDropZoneState<T>`)
+
+| Name            | Type                                          | Description                                               |
+| --------------- | --------------------------------------------- | --------------------------------------------------------- |
+| `files`         | `File[]` or `File\| null`                     | Current file(s)                                           |
+| `arrayBuffer`   | `ArrayBuffer[]` or `ArrayBuffer\| null`       | Read file data (when `isArrayBuffer: true`)               |
+| `progress`      | `number` or `Record<number,number>`           | Upload progress per file or overall                       |
+| `error`         | `string \| null`                              | Error message, if any                                     |
+| `isDragActive`  | `boolean`                                     | If a file is currently being dragged over the dropzone    |
+| `onDelete`      | `(index?: number) => void`                    | Remove a file by index or all                             |
+| `abortUpload`   | `() => void`                                  | Abort all current uploads                                 |
+| `status`        | `'idle' \| 'reading' \| 'aborted' \| 'error'` | Current upload status                                     |
+| `getRootProps`  | `() => DropZoneRootProps`                     | Props for root dropzone element (spread onto `<div>`)     |
+| `getInputProps` | `() => DropZoneInputProps`                    | Props for `<input type="file" />` (spread onto `<input>`) |
+| `utils`         | `{ getFile, getData, getProgress, reset }`    | Utility functions                                         |
+
+---
+
+### Utility Functions (from `utils`)
+
+- `getFile(index?: number)`: Get file(s) by index or all.
+- `getData(index?: number)`: Get ArrayBuffer(s) by index or all.
+- `getProgress(index?: number)`: Get progress by index or all.
+- `reset()`: Reset input and state.
+
+---
+
+## MIME Type List
+
+`accept` can be any of:
+
+- `image/*`, `video/*`, `audio/*`, `application/pdf`, `application/zip`, etc.
+- [Full list of supported MIME types here...](https://developer.mozilla.org/en-US/docs/Web/HTTP/Basics_of_HTTP/MIME_types/Common_types)
+
+---
+
+## Accessibility
+
+- The root dropzone is keyboard accessible (role="button", tabIndex=0).
+- ARIA attributes for drag state and errors.
+- Input is hidden but accessible to assistive technologies.
+
+---
+
+## License
+
+MIT
+
+---
+
+## Credits
+
+Created and maintained by [@jsdev-robin](https://github.com/jsdev-robin)
