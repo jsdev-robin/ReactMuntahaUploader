@@ -1,8 +1,9 @@
 {
   "name": "react-muntaha-uploader",
-  "version": "3.0.9",
+  "version": "3.1.1",
   "main": "dist/index.js",
   "types": "dist/index.d.ts",
+  "files": ["dist", "README.md"],
   "scripts": {
     "build": "tsc",
     "test": "jest",
@@ -19,7 +20,7 @@
     "url": "https://github.com/jsdev-robin/ReactMuntahaUploader/issues"
   },
   "homepage": "https://github.com/jsdev-robin/ReactMuntahaUploader#readme",
-  "description": "",
+  "description": "A lightweight React file uploader with TypeScript support and customizable UI.",
   "keywords": [
     "react",
     "uploader",
@@ -28,9 +29,9 @@
     "react-component",
     "file-management"
   ],
-  "dependencies": {
-    "react": "^19.0.0",
-    "react-dom": "^19.0.0"
+  "peerDependencies": {
+    "react": "^18.0.0 || ^19.0.0",
+    "react-dom": "^18.0.0 || ^19.0.0"
   },
   "devDependencies": {
     "@babel/cli": "^7.25.9",
@@ -40,8 +41,8 @@
     "@babel/preset-typescript": "^7.26.0",
     "@testing-library/jest-dom": "^6.6.3",
     "@testing-library/react": "^16.0.1",
-    "@types/react": "^18.3.12",
-    "@types/react-dom": "^18.3.1",
+    "@types/react": "^19.0.0",
+    "@types/react-dom": "^19.0.0",
     "eslint": "^9.15.0",
     "eslint-plugin-react": "^7.37.2",
     "eslint-plugin-react-hooks": "^5.0.0",
